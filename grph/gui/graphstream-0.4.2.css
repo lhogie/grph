@@ -1,0 +1,17 @@
+graph {
+	color: white;
+}
+
+node {
+	width: 20;
+	color: white;
+	text-color: black;
+	border-color: black;
+	border-width: 1;
+}
+
+edge {
+	width: 1;
+	color: grey;
+}
+

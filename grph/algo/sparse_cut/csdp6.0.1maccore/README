@@ -1,0 +1,27 @@
+Copyright 1997-2006, Brian Borchers.  This copy of CSDP 6.0.1 is made
+available under the Common Public License.  See license-cpl.txt for
+the details of the CPL.
+
+This directory includes a binary version of CSDP for Mac's with Intel
+Core Duo or Core 2 Duo processors.  Note that because gcc 4.2 is not
+yet standard in Mac OS X, this code has not been compiled with OpenMP
+and is thus not properly optimized to use multiple processors- rather,
+it simply uses Apple's BLAS/LAPACK libraries and is parallelized only to
+the extent that these libraries are parallelized.
+ 
+The directories are as follows:
+
+  doc                  documentation.
+
+  matlab               MATLAB routines for interfacing to CSDP.  
+
+  bin                  Executable version of csdp.
+
+Installation:  Copy csdp from the bin directory into a directory that
+is in your search path.  If you want to use the MATLAB interface, copy the
+contents of the MATLAB directory into a directory that is in your MATLAB
+search path.
+
+
+
+
