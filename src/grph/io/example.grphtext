@@ -1,0 +1,10 @@
+vertex class = 
+
+vertices:
+	1 4 6, color=red
+	1 2 4, label=foo
+
+edges:
+	1 > 2
+	{1 4} > {2 6 1}, color=blue
+	{2 6}
