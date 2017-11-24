@@ -1,0 +1,7 @@
+*
+*/
+!.gitignore
+!src/
+!doc/
+doc/javadoc/
+
