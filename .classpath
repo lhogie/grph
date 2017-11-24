@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/drmsim-brite"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/java4unix"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jExperiment"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jalinopt"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/papareto"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/toools"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jaseto"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Google-KShortestPath"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/minidese"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/octojus"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/client-server"/>
+	<classpathentry kind="lib" path="/libs/bsh-2.0b4.jar"/>
+	<classpathentry kind="lib" path="/libs/jfig-bean.jar"/>
+	<classpathentry kind="lib" path="/libs/jline-1.0.jar"/>
+	<classpathentry kind="lib" path="/libs/PDFRenderer.jar"/>
+	<classpathentry kind="lib" path="/libs/svgSalamander-tiny.jar"/>
+	<classpathentry kind="lib" path="/libs/fastutil-8.1.0.jar"/>
+	<classpathentry kind="lib" path="/libs/graphstream.old.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
