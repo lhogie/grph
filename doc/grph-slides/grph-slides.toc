@@ -1,0 +1,7 @@
+\beamer@endinputifotherversion {3.26pt}
+\beamer@sectionintoc {1}{Motivations for developing another graph library}{3}{0}{1}
+\beamer@sectionintoc {2}{Global overview of \textsc {Grph}\xspace }{6}{0}{2}
+\beamer@sectionintoc {3}{7 bullets to kill performance bottlenecks}{20}{0}{3}
+\beamer@sectionintoc {4}{Demonstration}{29}{0}{4}
+\beamer@sectionintoc {5}{Users}{30}{0}{5}
+\beamer@sectionintoc {6}{Conclusion}{31}{0}{6}

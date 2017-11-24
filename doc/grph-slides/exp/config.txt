@@ -1,0 +1,5 @@
+algorithm=SeqJ, ParJ, SeqC, ParC
+topology=grid, glp
+number of vertices=100, 1000, 10000
+metrics=result, running time
+plot=

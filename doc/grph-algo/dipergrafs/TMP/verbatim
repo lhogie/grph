@@ -1,0 +1,16 @@
+
+<tex2html_mydb_mark>#1#% import *;
+
+<tex2html_mydb_mark>#2#% g = new ListGraph();
+
+<tex2html_mydb_mark>#3#% g.createVertices(20);
+
+<tex2html_mydb_mark>#4#% g.dgrid();
+
+<tex2html_mydb_mark>#5#% d = g.getDiameter();
+
+<tex2html_mydb_mark>#6#% print(d);
+
+<tex2html_mydb_mark>#7#% import *;
+
+<tex2html_mydb_mark>#8#% print(new ListGraph().createVertices(20).dgrid().getDiameter());

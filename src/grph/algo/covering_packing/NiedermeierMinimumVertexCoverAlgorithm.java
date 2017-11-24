@@ -1,32 +1,44 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
 
 package grph.algo.covering_packing;
+
+import grph.DefaultIntSet;
 
 /**
  * @author Gregory Morel, Vincent Levorato, Jean-Francois Lalande
@@ -36,9 +48,11 @@ package grph.algo.covering_packing;
 import grph.Grph;
 import grph.GrphAlgorithm;
 import grph.in_memory.InMemoryGrph;
-import toools.set.DefaultIntSet;
-import toools.set.IntSet;
-import toools.set.IntSets;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import toools.collections.LucIntSets;
+import toools.collections.primitive.LucIntSet;
+import toools.collections.primitive.SelfAdaptiveIntSet;
 
 @SuppressWarnings("serial")
 public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet>
@@ -47,7 +61,7 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 	@Override
 	public IntSet compute(Grph g)
 	{
-		return branching(g.clone(), new DefaultIntSet());
+		return branching(g.clone(), new SelfAdaptiveIntSet());
 	}
 
 	/*
@@ -103,12 +117,12 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 
 			// Build two graphs: g1 := g \ {v}, and g2 := g \ N[v] and branch
 			Grph g1 = g.clone();
-			IntSet vc1 = vc.clone();
+			IntSet vc1 = new IntOpenHashSet(vc);
 			g1.removeVertex(v);
 			vc1.add(v);
 
 			Grph g2 = g.clone();
-			IntSet vc2 = vc.clone();
+			IntSet vc2 = new IntOpenHashSet(vc);
 			IntSet n = g2.getNeighbours(v);
 			g2.removeVertices(n);
 			g2.removeVertex(v);
@@ -131,12 +145,12 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 
 			// Build two graphs: g1 := g \ {v}, and g2 := g \ N[v] and branch
 			Grph g1 = g.clone();
-			IntSet vc1 = vc.clone();
+			IntSet vc1 = new IntOpenHashSet(vc);
 			g1.removeVertex(v);
 			vc1.add(v);
 
 			Grph g2 = g.clone();
-			IntSet vc2 = vc.clone();
+			IntSet vc2 = new IntOpenHashSet(vc);
 			IntSet n = g2.getNeighbours(v);
 			g2.removeVertices(n);
 			g2.removeVertex(v);
@@ -181,7 +195,8 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 				// b that is different of x
 				Nb.remove(x); // Useless to restore x after
 
-				if (g.getVertexDegree(a) == 2 && g.getVertexDegree(b) == 2 && !Na.isEmpty() && Na.equals(Nb))
+				if (g.getVertexDegree(a) == 2 && g.getVertexDegree(b) == 2
+						&& ! Na.isEmpty() && Na.equals(Nb))
 				{
 					int c = Na.toIntArray()[0];
 					vc.add(x);
@@ -193,13 +208,16 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 				else
 				{
 					Grph g1 = g.clone();
-					IntSet vc1 = vc.clone();
+					LucIntSet vc1 = new DefaultIntSet();
+					vc1.addAll(vc);
 					g1.removeVertices(a, b, x); // We can remove x too
 					vc1.addAll(a, b);
 
 					Grph g2 = g.clone();
-					IntSet vc2 = vc.clone();
-					IntSet nab = IntSets.union(g2.getNeighbours(a), g2.getNeighbours(b));
+					IntSet vc2 = new DefaultIntSet();
+					vc2.addAll(vc);
+					IntSet nab = LucIntSets.unionTo(new IntOpenHashSet(),
+							g2.getNeighbours(a), g2.getNeighbours(b));
 					g2.removeVertices(nab);
 					g2.removeVertices(a, b); // Now a and b are isolated, so we
 					// can remove them
@@ -228,7 +246,7 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 
 			// Test if x is part of a triangle; if it is, variable t is
 			// different of initial value -1
-			int t = -1;
+			int t = - 1;
 			if (g.areVerticesAdjacent(a, b))
 			{
 				t = c;
@@ -243,16 +261,20 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 			}
 
 			// If such a triangle exists, branch according to N(x) and N(t)
-			if (t != -1)
+			if (t != - 1)
 			{
 				Grph g1 = g.clone();
-				IntSet vc1 = vc.clone();
+				LucIntSet vc1 = new DefaultIntSet();
+				vc1.addAll(vc);
+
 				g1.removeVertices(nx);
 				g1.removeVertex(x);
 				vc1.addAll(nx);
 
 				Grph g2 = g.clone();
-				IntSet vc2 = vc.clone();
+				LucIntSet vc2 = new DefaultIntSet();
+				vc2.addAll(vc);
+
 				IntSet nt = g2.getNeighbours(t);
 				g2.removeVertices(nt);
 				g2.removeVertex(t);
@@ -280,12 +302,12 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 			nb.remove(x);
 			nc.remove(x);
 
-			if (!IntSets.intersection(na, nb).isEmpty())
-				n = IntSets.intersection(na, nb);
-			else if (!IntSets.intersection(na, nc).isEmpty())
-				n = IntSets.intersection(na, nc);
-			else if (!IntSets.intersection(nb, nc).isEmpty())
-				n = IntSets.intersection(nb, nc);
+			if ( ! LucIntSets.intersection(na, nb).isEmpty())
+				n = LucIntSets.intersection(na, nb);
+			else if ( ! LucIntSets.intersection(na, nc).isEmpty())
+				n = LucIntSets.intersection(na, nc);
+			else if ( ! LucIntSets.intersection(nb, nc).isEmpty())
+				n = LucIntSets.intersection(nb, nc);
 
 			if (n != null)
 			{
@@ -294,13 +316,16 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 
 				// We branch on N(x) and {x,d}
 				Grph g1 = g.clone();
-				IntSet vc1 = vc.clone();
+				LucIntSet vc1 = new DefaultIntSet();
+				vc1.addAll(vc);
 				g1.removeVertices(nx);
 				g1.removeVertex(x);
 				vc1.addAll(nx);
 
 				Grph g2 = g.clone();
-				IntSet vc2 = vc.clone();
+				LucIntSet vc2 = new DefaultIntSet();
+				vc2.addAll(vc);
+
 				g2.removeVertices(x, d); // we can remove a, b and c since they
 				// are now isolated
 				vc2.addAll(x, d);
@@ -316,7 +341,9 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 
 			// Last possible case: branching on N(x), N(a) and {a} U N(b) U N(c)
 			Grph g1 = g.clone();
-			IntSet vc1 = vc.clone();
+			LucIntSet vc1 = new DefaultIntSet();
+			vc1.addAll(vc);
+
 			g1.removeVertices(nx);
 			g1.removeVertex(x);
 			vc1.addAll(nx);
@@ -327,19 +354,21 @@ public class NiedermeierMinimumVertexCoverAlgorithm extends GrphAlgorithm<IntSet
 			nc.add(x);
 
 			Grph g2 = g.clone();
-			IntSet vc2 = vc.clone();
+			LucIntSet vc2 = new DefaultIntSet();
+			vc2.addAll(vc);
 			g2.removeVertices(na);
 			g2.removeVertex(a);
 			vc2.addAll(na);
 
 			Grph g3 = g.clone();
-			IntSet vc3 = vc.clone();
+			LucIntSet vc3 = new DefaultIntSet();
+			vc3.addAll(vc);
 
 			// In the following instruction, we have to compute the union,
 			// because removing nb first, and
 			// nc then may cause an error if a vertex of nc has been already
 			// removed.
-			g3.removeVertices(IntSets.union(nb, nc));
+			g3.removeVertices(LucIntSets.unionTo(new IntOpenHashSet(), nb, nc));
 
 			vc3.addAll(a);
 			vc3.addAll(nb);

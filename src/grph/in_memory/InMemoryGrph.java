@@ -1,44 +1,56 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
 
 package grph.in_memory;
+
+import java.io.Serializable;
+import java.util.BitSet;
 
 import grph.Grph;
 import grph.TopologyListener;
 import grph.algo.topology.ClassicalGraphs;
-import grph.properties.NumericalProperty;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import toools.NotYetImplementedException;
 import toools.UnitTests;
-import toools.set.IntHashSet;
-import toools.set.IntSet;
-import toools.set.UnmodifiableIntSet;
-
-import com.carrotsearch.hppc.IntArrayList;
+import toools.collections.primitive.IntCursor;
+import toools.collections.primitive.LucIntHashSet;
+import toools.collections.primitive.LucIntSet;
 
 /**
  * The basic data-structure. It mainly defines and implements the data structure
@@ -54,19 +66,20 @@ import com.carrotsearch.hppc.IntArrayList;
  * @author lhogie
  * 
  */
-public class InMemoryGrph extends Grph
+public class InMemoryGrph extends Grph implements Serializable
 {
-	private final GraphElementSet vertexSet;
-	private final GraphElementSet edgeSet;
+	private final GrphIntSet vertexSet;
+	private final GrphIntSet edgeSet;
 
 	private final IncidenceList v_out_only;
 	private final IncidenceList v_in_only;
 	private final IncidenceList v_in_out_only;
 
-	private final NumericalProperty simple_edge_directivity;
+	// in vertex for simple edges
+	private final AutoSizingIntArrayList se_a;
 
-	private final IntArrayList se_a;
-	private final IntArrayList se_b;
+	// out vertex for simple edges
+	private final AutoSizingIntArrayList se_b;
 
 	private final IncidenceList undirectedHyperEdgeVertices;
 	private final IncidenceList directedHyperEdgeTail;
@@ -77,10 +90,11 @@ public class InMemoryGrph extends Grph
 	private int numberOfUndirectedHyperEdges = 0;
 	private int numberOfDirectedHyperEdges = 0;
 
+	private final BitSet simple_edge_directivity;
+
 	// private transient final NeighboursCache outNeighborsCache = new
 	// OutNeighboursCache(this);
 
-	private final boolean storeEdges;
 	private final DIRECTION navigation;
 
 	private final String gid;
@@ -90,31 +104,41 @@ public class InMemoryGrph extends Grph
 		this("a graph", true, DIRECTION.in_out);
 	}
 
+	public String getID()
+	{
+		return gid;
+	}
+
 	public InMemoryGrph(String gid, boolean storeEdges, DIRECTION navigation)
 	{
 		super(gid);
-		vertexSet = new GraphElementSet();
+		vertexSet = new GrphIntSet();
 
 		assert gid != null;
 		this.gid = gid;
-		this.storeEdges = storeEdges;
 
 		assert navigation != null;
 		this.navigation = navigation;
 
-
-		v_in_only = navigation == DIRECTION.in || navigation == DIRECTION.in_out ? new IncidenceList() : null;
-		v_out_only = navigation == DIRECTION.out || navigation == DIRECTION.in_out ? new IncidenceList() : null;
+		v_in_only = navigation == DIRECTION.in || navigation == DIRECTION.in_out
+				? new IncidenceList()
+				: null;
+		v_out_only = navigation == DIRECTION.out || navigation == DIRECTION.in_out
+				? new IncidenceList()
+				: null;
 		v_in_out_only = new IncidenceList();
 
-		edgeSet = storeEdges ? new GraphElementSet() : null;
-		simple_edge_directivity = storeEdges ? new NumericalProperty(null, 1, 0) : null;
+		edgeSet = storeEdges ? new GrphIntSet() : null;
+		simple_edge_directivity = storeEdges ? new BitSet() : null;
 		undirectedHyperEdgeVertices = storeEdges ? new IncidenceList() : null;
-
-		se_a = storeEdges ? new IntArrayList() : null;
-		se_b = storeEdges ? new IntArrayList() : null;
-		directedHyperEdgeTail = storeEdges && (navigation == DIRECTION.in || navigation == DIRECTION.in_out) ? new IncidenceList() : null;
-		directedHyperEdgeHead = navigation == DIRECTION.out || navigation == DIRECTION.in_out ? new IncidenceList() : null;
+		se_a = storeEdges ? new AutoSizingIntArrayList() : null;
+		se_b = storeEdges ? new AutoSizingIntArrayList() : null;
+		directedHyperEdgeTail = storeEdges
+				&& (navigation == DIRECTION.in || navigation == DIRECTION.in_out)
+						? new IncidenceList()
+						: null;
+		directedHyperEdgeHead = navigation == DIRECTION.out
+				|| navigation == DIRECTION.in_out ? new IncidenceList() : null;
 	}
 
 	/**
@@ -136,7 +160,7 @@ public class InMemoryGrph extends Grph
 	@Override
 	public boolean storeEdges()
 	{
-		return storeEdges;
+		return edgeSet != null;
 	}
 
 	@Override
@@ -145,17 +169,25 @@ public class InMemoryGrph extends Grph
 		return navigation;
 	}
 
-	private static IntSet ensureNotDangerous(IntSet s)
+	private static LucIntSet ensureNotDangerous(LucIntSet s)
 	{
-		// if this is an set used in the implementation of the data structure,
-		// we need to return a read-only copy of it
-		if (s.getClass() == GrphInternalSet.class)
+		if (s == null)
 		{
-			return ((GrphInternalSet) s).makeReadOnly();
+			return null;
 		}
 		else
 		{
-			return s;
+			// if this is an set used in the implementation of the data
+			// structure,
+			// we need to return a read-only copy of it
+			if (s.getClass() == GrphIntSet.class)
+			{
+				return new LucIntSet.UnmodifiableLucSet(s);
+			}
+			else
+			{
+				return s;
+			}
 		}
 	}
 
@@ -167,7 +199,7 @@ public class InMemoryGrph extends Grph
 	 * @return a set of vertices
 	 */
 	@Override
-	public IntSet getUndirectedHyperEdgeVertices(int edge)
+	public LucIntSet getUndirectedHyperEdgeVertices(int edge)
 	{
 		assert isUndirectedHyperEdge(edge);
 		return ensureNotDangerous(undirectedHyperEdgeVertices.getValue(edge));
@@ -180,9 +212,9 @@ public class InMemoryGrph extends Grph
 	 */
 	// public IncidenceList<VertexIncidence> getVertices()
 	@Override
-	public IntSet getVertices()
+	public LucIntSet getVertices()
 	{
-		return new UnmodifiableIntSet(vertexSet);
+		return new LucIntSet.UnmodifiableLucSet(vertexSet);
 	}
 
 	/**
@@ -191,9 +223,10 @@ public class InMemoryGrph extends Grph
 	 * @return a set of edges.
 	 */
 	// public IncidenceList<EdgeIncidence> getEdges()
-	public IntSet getEdges()
+	@Override
+	public LucIntSet getEdges()
 	{
-		return new UnmodifiableIntSet(edgeSet);
+		return edgeSet.unmodifiable();
 	}
 
 	@Override
@@ -209,14 +242,14 @@ public class InMemoryGrph extends Grph
 	}
 
 	@Override
-	public IntSet getOutOnlyElements(int v)
+	public LucIntSet getOutOnlyElements(int v)
 	{
 		assert vertexSet.contains(v) : "vertex does not exist: " + v;
 		return ensureNotDangerous(v_out_only.getValue(v));
 	}
 
 	@Override
-	public IntSet getInOnlyElements(int v)
+	public LucIntSet getInOnlyElements(int v)
 	{
 		assert vertexSet.contains(v) : "vertex does not exist: " + v;
 
@@ -227,7 +260,7 @@ public class InMemoryGrph extends Grph
 	}
 
 	@Override
-	public IntSet getInOutOnlyElements(int v)
+	public LucIntSet getInOutOnlyElements(int v)
 	{
 		assert vertexSet.contains(v) : "vertex does not exist: " + v;
 
@@ -257,7 +290,7 @@ public class InMemoryGrph extends Grph
 	@Override
 	public void removeEdge(int u, int v)
 	{
-		assert !storeEdges();
+		assert ! storeEdges();
 
 		if (isUndirectedSimpleEdge(u, v))
 		{
@@ -266,7 +299,7 @@ public class InMemoryGrph extends Grph
 			--numberOfUndirectedSimpleEdges;
 
 			for (TopologyListener l : getTopologyListeners())
-				l.undirectedSimpleEdgeRemoved(this, -1, u, v);
+				l.undirectedSimpleEdgeRemoved(this, - 1, u, v);
 		}
 		else
 		{
@@ -283,7 +316,7 @@ public class InMemoryGrph extends Grph
 			--numberOfDirectedSimpleEdges;
 
 			for (TopologyListener l : getTopologyListeners())
-				l.directedSimpleEdgeRemoved(this, -1, u, v);
+				l.directedSimpleEdgeRemoved(this, - 1, u, v);
 		}
 
 	}
@@ -300,7 +333,7 @@ public class InMemoryGrph extends Grph
 	public boolean isUndirectedSimpleEdge(int edge)
 	{
 		assert edgeSet.contains(edge);
-		return isSimpleEdge(edge) && simple_edge_directivity.getValue(edge) == 0;
+		return isSimpleEdge(edge) && ! simple_edge_directivity.get(edge);
 	}
 
 	/**
@@ -334,40 +367,38 @@ public class InMemoryGrph extends Grph
 		assert a >= 0;
 		assert b >= 0;
 
-		if (!containsVertex(a))
+		if ( ! containsVertex(a))
 		{
 			addVertex(a);
 		}
 
-		if (!containsVertex(b))
+		if ( ! containsVertex(b))
 		{
 			addVertex(b);
 		}
 
 		if (edgeSet == null)
 		{
-			assert edge == -1;
+			assert edge == - 1;
 			v_in_out_only.add(a, b);
 			v_in_out_only.add(b, a);
 		}
 		else
 		{
 			assert edge >= 0;
-			assert !edgeSet.contains(edge) : "edge already in graph " + edge;
+			assert ! edgeSet.contains(edge) : "edge already in graph " + edge;
 
 			edgeSet.add(edge);
-			simple_edge_directivity.setValue(edge, 0);
+			simple_edge_directivity.clear(edge);
 
 			if (se_a != null)
 			{
-				se_a.ensureCapacity(edge + 1);
-				se_a.buffer[edge] = a;
+				se_a.set(edge, a);
 			}
 
 			if (se_b != null)
 			{
-				se_b.ensureCapacity(edge + 1);
-				se_b.buffer[edge] = b;
+				se_b.set(edge, b);
 			}
 
 			v_in_out_only.add(a, edge);
@@ -400,14 +431,15 @@ public class InMemoryGrph extends Grph
 	{
 		assert tail >= 0;
 		assert head >= 0;
-		assert edge == -1 || !getEdges().contains(edge) : "edge already in graph: " + edge;
+		assert edge == - 1 || ! getEdges().contains(edge) : "edge already in graph: "
+				+ edge;
 
-		if (!containsVertex(head))
+		if ( ! containsVertex(head))
 		{
 			addVertex(head);
 		}
 
-		if (!containsVertex(tail))
+		if ( ! containsVertex(tail))
 		{
 			addVertex(tail);
 		}
@@ -415,11 +447,9 @@ public class InMemoryGrph extends Grph
 		if (storeEdges())
 		{
 			edgeSet.add(edge);
-			se_a.ensureCapacity(edge + 1);
-			se_a.buffer[edge] = tail;
-			se_b.ensureCapacity(edge + 1);
-			se_b.buffer[edge] = head;
-			simple_edge_directivity.setValue(edge, 1);
+			se_a.set(edge, tail);
+			se_b.set(edge, head);
+			simple_edge_directivity.set(edge);
 
 			if (v_out_only != null)
 			{
@@ -460,7 +490,7 @@ public class InMemoryGrph extends Grph
 	@Override
 	public void addDirectedHyperEdge(int edge)
 	{
-		assert !getEdges().contains(edge) : "edge already in graph: " + edge;
+		assert ! getEdges().contains(edge) : "edge already in graph: " + edge;
 
 		edgeSet.add(edge);
 		++numberOfDirectedHyperEdges;
@@ -482,7 +512,7 @@ public class InMemoryGrph extends Grph
 	@Override
 	public void addVertex(int v)
 	{
-		assert !vertexSet.contains(v);
+		assert ! vertexSet.contains(v);
 
 		vertexSet.add(v);
 
@@ -535,12 +565,12 @@ public class InMemoryGrph extends Grph
 		assert vertex >= 0;
 		assert isUndirectedHyperEdge(edge) : "an hyperedge is expected";
 
-		if (!containsVertex(vertex))
+		if ( ! containsVertex(vertex))
 		{
 			addVertex(vertex);
 		}
 
-		if (!containsEdge(edge))
+		if ( ! containsEdge(edge))
 		{
 			addUndirectedHyperEdge(edge);
 		}
@@ -559,12 +589,12 @@ public class InMemoryGrph extends Grph
 		assert v >= 0;
 		assert isDirectedHyperEdge(e) : "a directed hyperedge is expected";
 
-		if (!containsVertex(v))
+		if ( ! containsVertex(v))
 		{
 			addVertex(v);
 		}
 
-		if (!containsEdge(e))
+		if ( ! containsEdge(e))
 		{
 			addDirectedHyperEdge(e);
 		}
@@ -583,12 +613,12 @@ public class InMemoryGrph extends Grph
 		assert v >= 0;
 		assert isDirectedHyperEdge(e) : "a directed hyperedge is expected";
 
-		if (!containsVertex(v))
+		if ( ! containsVertex(v))
 		{
 			addVertex(v);
 		}
 
-		if (!getEdges().contains(e))
+		if ( ! getEdges().contains(e))
 		{
 			addDirectedHyperEdge(e);
 		}
@@ -614,13 +644,13 @@ public class InMemoryGrph extends Grph
 		assert edge >= 0;
 		assert vertex >= 0;
 
-		if (!getVertices().contains(vertex))
+		if ( ! getVertices().contains(vertex))
 			throw new IllegalArgumentException("vertex not in graph: " + vertex);
 
-		if (!getEdges().contains(edge))
+		if ( ! getEdges().contains(edge))
 			throw new IllegalArgumentException("edge not in graph: " + edge);
 
-		if (!isUndirectedHyperEdge(edge))
+		if ( ! isUndirectedHyperEdge(edge))
 			throw new IllegalArgumentException("an hyperedge is expected");
 
 		undirectedHyperEdgeVertices.remove(edge, vertex);
@@ -633,13 +663,13 @@ public class InMemoryGrph extends Grph
 		assert edge >= 0;
 		assert vertex >= 0;
 
-		if (!getVertices().contains(vertex))
+		if ( ! getVertices().contains(vertex))
 			throw new IllegalArgumentException("vertex not in graph: " + vertex);
 
-		if (!getEdges().contains(edge))
+		if ( ! getEdges().contains(edge))
 			throw new IllegalArgumentException("edge not in graph: " + edge);
 
-		if (!isDirectedHyperEdge(edge))
+		if ( ! isDirectedHyperEdge(edge))
 			throw new IllegalArgumentException("an hyperedge is expected");
 
 		directedHyperEdgeTail.remove(edge, vertex);
@@ -652,13 +682,13 @@ public class InMemoryGrph extends Grph
 		assert edge >= 0;
 		assert vertex >= 0;
 
-		if (!getVertices().contains(vertex))
+		if ( ! getVertices().contains(vertex))
 			throw new IllegalArgumentException("vertex not in graph: " + vertex);
 
-		if (!getEdges().contains(edge))
+		if ( ! getEdges().contains(edge))
 			throw new IllegalArgumentException("edge not in graph: " + edge);
 
-		if (!isDirectedHyperEdge(edge))
+		if ( ! isDirectedHyperEdge(edge))
 			throw new IllegalArgumentException("an hyperedge is expected");
 
 		directedHyperEdgeHead.remove(edge, vertex);
@@ -679,14 +709,19 @@ public class InMemoryGrph extends Grph
 
 		disconnectVertex(v);
 
-		if (!getInOnlyElements(v).isEmpty())
-			throw new IllegalStateException("vertex cannot be removed because it is connected " + getInOnlyElements(v));
+		if ( ! getInOnlyElements(v).isEmpty())
+			throw new IllegalStateException(
+					"vertex cannot be removed because it is connected "
+							+ getInOnlyElements(v));
 
-		if (!getOutOnlyElements(v).isEmpty())
-			throw new IllegalStateException("vertex cannot be removed because it is connected ");
+		if ( ! getOutOnlyElements(v).isEmpty())
+			throw new IllegalStateException(
+					"vertex cannot be removed because it is connected ");
 
-		if (!getInOutOnlyElements(v).isEmpty())
-			throw new IllegalStateException("vertex " + v + " cannot be removed because it is connected " + getInOutOnlyElements(v));
+		if ( ! getInOutOnlyElements(v).isEmpty())
+			throw new IllegalStateException(
+					"vertex " + v + " cannot be removed because it is connected "
+							+ getInOutOnlyElements(v));
 
 		vertexSet.remove(v);
 
@@ -715,14 +750,14 @@ public class InMemoryGrph extends Grph
 	@Override
 	public void removeEdge(int edge)
 	{
-		assert storeEdges;
+		assert storeEdges();
 		assert edgeSet.contains(edge) : "edge not in graph " + edge;
 
 		if (isUndirectedSimpleEdge(edge))
 		{
-			int a = se_a.buffer[edge];
+			int a = se_a.getInt(edge);
 			v_in_out_only.remove(a, edge);
-			int b = se_b.buffer[edge];
+			int b = se_b.getInt(edge);
 
 			// if this was a loop
 			if (a != b)
@@ -738,14 +773,14 @@ public class InMemoryGrph extends Grph
 		}
 		else if (isDirectedSimpleEdge(edge))
 		{
-			int tail = se_a.buffer[edge];
+			int tail = se_a.getInt(edge);
 
 			if (v_out_only != null)
 			{
 				v_out_only.remove(tail, edge);
 			}
 
-			int head = se_b.buffer[edge];
+			int head = se_b.getInt(edge);
 
 			if (v_in_only != null)
 			{
@@ -790,7 +825,7 @@ public class InMemoryGrph extends Grph
 	public boolean isDirectedSimpleEdge(int edge)
 	{
 		assert edgeSet.contains(edge) : "edge not in graph " + edge;
-		return isSimpleEdge(edge) && simple_edge_directivity.getValue(edge) == 1;
+		return isSimpleEdge(edge) && simple_edge_directivity.get(edge);
 	}
 
 	/**
@@ -805,7 +840,8 @@ public class InMemoryGrph extends Grph
 	{
 		assert edgeSet.contains(edge);
 		return (directedHyperEdgeHead != null && directedHyperEdgeHead.hasValue(edge))
-				|| (directedHyperEdgeTail != null && directedHyperEdgeTail.hasValue(edge));
+				|| (directedHyperEdgeTail != null
+						&& directedHyperEdgeTail.hasValue(edge));
 	}
 
 	/**
@@ -821,7 +857,7 @@ public class InMemoryGrph extends Grph
 		assert edgeSet.contains(edge) : "edge not in graph " + edge;
 		assert isDirectedSimpleEdge(edge);
 		assert getNavigation() == DIRECTION.in || getNavigation() == DIRECTION.in_out;
-		return se_a.buffer[edge];
+		return se_a.getInt(edge);
 	}
 
 	/**
@@ -837,7 +873,7 @@ public class InMemoryGrph extends Grph
 		assert edgeSet.contains(edge) : "edge not in graph " + edge;
 		assert isDirectedSimpleEdge(edge);
 		assert getNavigation() == DIRECTION.out || getNavigation() == DIRECTION.in_out;
-		return se_b.buffer[edge];
+		return se_b.getInt(edge);
 	}
 
 	/**
@@ -853,9 +889,9 @@ public class InMemoryGrph extends Grph
 	{
 		assert edgeSet.contains(edge) : "edge not in graph " + edge;
 		assert isSimpleEdge(edge);
-		assert storeEdges;
+		assert storeEdges();
 
-		return se_a.buffer[edge];
+		return se_a.getInt(edge);
 	}
 
 	/**
@@ -872,13 +908,14 @@ public class InMemoryGrph extends Grph
 	public int getTheOtherVertex(int edge, int thisVertex)
 	{
 		assert thisVertex >= 0;
-		assert storeEdges;
+		assert storeEdges();
 		assert edge >= 0;
-		assert edgeSet.contains(edge) : "edge not in graph " + edge + ", edges are " + edgeSet;
+		assert edgeSet.contains(edge) : "edge not in graph " + edge + ", edges are "
+				+ edgeSet;
 		assert vertexSet.contains(thisVertex) : "vertex not in graph " + thisVertex;
 		assert isSimpleEdge(edge);
-		int a = se_a.buffer[edge];
-		return thisVertex != a ? a : se_b.buffer[edge];
+		int a = se_a.getInt(edge);
+		return thisVertex != a ? a : se_b.getInt(edge);
 	}
 
 	/**
@@ -889,7 +926,7 @@ public class InMemoryGrph extends Grph
 	 * @return the tail of the edge.
 	 */
 	@Override
-	public IntSet getDirectedHyperEdgeTail(int e)
+	public LucIntSet getDirectedHyperEdgeTail(int e)
 	{
 		assert edgeSet.contains(e) : "edge not in graph " + e;
 		assert isDirectedHyperEdge(e);
@@ -904,7 +941,7 @@ public class InMemoryGrph extends Grph
 	 * @return the head of the edge.
 	 */
 	@Override
-	public IntSet getDirectedHyperEdgeHead(int e)
+	public LucIntSet getDirectedHyperEdgeHead(int e)
 	{
 		assert edgeSet.contains(e) : "edge not in graph " + e;
 		assert isDirectedHyperEdge(e);
@@ -964,10 +1001,34 @@ public class InMemoryGrph extends Grph
 	private static void testEdgesConnecting()
 	{
 		Grph g = ClassicalGraphs.PetersenGraph();
-		UnitTests.ensureEquals(g.getEdgesConnecting(8, 3).size(), 1);
-		UnitTests.ensureEquals(g.getEdgesConnecting(1, 6).size(), 1);
-		UnitTests.ensureEquals(g.getEdgesConnecting(4, 6).size(), 0);
-		UnitTests.ensureEquals(g.getEdgesConnecting(7, 0).size(), 0);
+		UnitTests.ensureEqual(g.getEdgesConnecting(8, 3).size(), 1);
+		UnitTests.ensureEqual(g.getEdgesConnecting(1, 6).size(), 1);
+		UnitTests.ensureEqual(g.getEdgesConnecting(4, 6).size(), 0);
+		UnitTests.ensureEqual(g.getEdgesConnecting(7, 0).size(), 0);
+	}
+
+	private static void testDirectedRemove()
+	{
+		InMemoryGrph g = new InMemoryGrph();
+		g.addDirectedSimpleEdge(4, 5, 1);
+		g.addDirectedSimpleEdge(0, 6, 4);
+		g.addDirectedSimpleEdge(0, 7, 4);
+		g.addDirectedSimpleEdge(3, 3, 2);
+		g.addDirectedSimpleEdge(0, 4, 4);
+		g.addDirectedSimpleEdge(3, 1, 2);
+
+		for (IntCursor c : IntCursor.fromFastUtil(g.getEdgesIncidentTo(4)))
+		{
+			UnitTests.ensure(g.containsEdge(c.value));
+		}
+
+		for (IntCursor c : IntCursor.fromFastUtil(g.getVerticesIncidentToEdge(5)))
+		{
+			UnitTests.ensure(g.containsVertex(c.value));
+		}
+
+		UnitTests.ensureEqual(g.getEdgesConnecting(4, 1).size(), 1);
+		UnitTests.ensureEqual(g.getEdgesConnecting(0, 4).size(), 3);
 	}
 
 	private static void testDegree()
@@ -979,60 +1040,63 @@ public class InMemoryGrph extends Grph
 		{
 			int inEdgeDegree = g.getVertexDegree(5, Grph.TYPE.edge, Grph.DIRECTION.in);
 			int outEdgeDegree = g.getVertexDegree(5, Grph.TYPE.edge, Grph.DIRECTION.out);
-			int inOutEdgeDegree = g.getVertexDegree(5, Grph.TYPE.edge, Grph.DIRECTION.in_out);
-			UnitTests.ensureEquals(inEdgeDegree + outEdgeDegree, inOutEdgeDegree);
+			int inOutEdgeDegree = g.getVertexDegree(5, Grph.TYPE.edge,
+					Grph.DIRECTION.in_out);
+			UnitTests.ensureEqual(inEdgeDegree + outEdgeDegree, inOutEdgeDegree);
 		}
 	}
 
 	private static void testBasicThings()
 	{
 		InMemoryGrph g = new InMemoryGrph();
-		UnitTests.ensureEquals(g.getVertices().isEmpty(), true);
-		UnitTests.ensureEquals(g.getEdges().size(), 0);
+		UnitTests.ensureEqual(g.getVertices().isEmpty(), true);
+		UnitTests.ensureEqual(g.getEdges().size(), 0);
 
 		g.grid(2, 2);
 
-		IntSet s = new IntHashSet();
+		IntSet s = new LucIntHashSet();
 		s.add(0);
 		s.add(1);
 		s.add(2);
 		s.add(3);
-		UnitTests.ensureEquals(g.getVertices(), s);
+		UnitTests.ensureEqual(g.getVertices(), s);
 
 		g.clear();
 		g.grid(5, 5);
 		// g.display();
 		UnitTests.ensure(g.getNeighbours(8).equals(3, 7, 9, 13));
-		UnitTests.ensureEquals(g.getVertices().size(), 25);
-		UnitTests.ensureEquals(g.getEdges().size(), 40);
-		UnitTests.ensureEquals(g.getDiameter(), 8);
+		UnitTests.ensureEqual(g.getVertices().size(), 25);
+		UnitTests.ensureEqual(g.getEdges().size(), 40);
+		UnitTests.ensureEqual(g.getDiameter(), 8);
 		// g.removeEdge(3);
 		// Test.ensure(g.getEdges().size(), 39);
 
-		UnitTests.ensureEquals(g.getConnectedComponents().size(), 1);
+		UnitTests.ensureEqual(g.getConnectedComponents().size(), 1);
 		g.disconnectVertex(7);
 		UnitTests.ensure(g.getNeighbours(8).equals(3, 9, 13));
-		UnitTests.ensureEquals(g.getEdgesIncidentTo(7).size(), 0);
-		UnitTests.ensureEquals(g.getVertices().size(), 25);
-		UnitTests.ensureEquals(g.getEdges().size(), 36);
+		UnitTests.ensureEqual(g.getEdgesIncidentTo(7).size(), 0);
+		UnitTests.ensureEqual(g.getVertices().size(), 25);
+		UnitTests.ensureEqual(g.getEdges().size(), 36);
 		g.removeEdge(22);
-		UnitTests.ensureEquals(g.getVertices().size(), 25);
-		UnitTests.ensureEquals(g.getEdges().size(), 35);
+		UnitTests.ensureEqual(g.getVertices().size(), 25);
+		UnitTests.ensureEqual(g.getEdges().size(), 35);
 
-		UnitTests.ensureEquals(g.getConnectedComponents().size(), 2);
+		UnitTests.ensureEqual(g.getConnectedComponents().size(), 2);
 		g.addSimpleEdge(0, 7, true);
 		g.addSimpleEdge(12, 8, true);
 		g.addSimpleEdge(8, 6, true);
 
-		UnitTests.ensureEquals(g.getVertexDegree(8, Grph.TYPE.edge, Grph.DIRECTION.out), 4);
-		UnitTests.ensureEquals(g.getVertexDegree(8, Grph.TYPE.edge, Grph.DIRECTION.in), 4);
-		UnitTests.ensureEquals(g.getVertexDegree(8, Grph.TYPE.edge, Grph.DIRECTION.in_out), 5);
+		UnitTests.ensureEqual(g.getVertexDegree(8, Grph.TYPE.edge, Grph.DIRECTION.out),
+				4);
+		UnitTests.ensureEqual(g.getVertexDegree(8, Grph.TYPE.edge, Grph.DIRECTION.in), 4);
+		UnitTests.ensureEqual(g.getVertexDegree(8, Grph.TYPE.edge, Grph.DIRECTION.in_out),
+				5);
 
-		UnitTests.ensureEquals(g.isMixed(), true);
+		UnitTests.ensureEqual(g.isMixed(), true);
 		int e = g.addDirectedSimpleEdge(0, 1);
-		UnitTests.ensureEquals(g.isMixed(), true);
+		UnitTests.ensureEqual(g.isMixed(), true);
 		g.removeEdge(e);
-		UnitTests.ensureEquals(g.isMixed(), true);
+		UnitTests.ensureEqual(g.isMixed(), true);
 	}
 
 	@Override
@@ -1046,5 +1110,4 @@ public class InMemoryGrph extends Grph
 	{
 		return edgeSet.contains(e);
 	}
-
 }

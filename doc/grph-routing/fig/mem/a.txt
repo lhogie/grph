@@ -1,0 +1,13 @@
+set term pdf
+set output "a.pdf"
+set xlabel "Number of elements"
+set ylabel "Greatest element"
+set zlabel "Memory usage"
+
+set xrange [0:100]
+set yrange [0:1000]
+set yrange [0:4000]
+
+#set pm3d
+
+splot 2*x title "hash", (y)/4 title "bit"

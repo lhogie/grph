@@ -1,48 +1,56 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
 
 package grph.algo.triangles.latapi;
-
-import grph.Grph;
-import grph.GrphAlgorithm;
-import grph.in_memory.InMemoryGrph;
 
 import java.io.IOException;
 import java.util.List;
 
+import grph.Grph;
+import grph.GrphAlgorithm;
+import grph.in_memory.InMemoryGrph;
 import toools.UnitTests;
+import toools.collections.primitive.IntCursor;
 import toools.extern.ExternalProgram;
 import toools.extern.Proces;
 import toools.io.JavaResource;
 import toools.io.file.RegularFile;
 import toools.text.TextUtilities;
-
-import com.carrotsearch.hppc.cursors.IntCursor;
 
 /**
  * Fast and Compact Algorithms for Triangle Problems in Very Large (Sparse
@@ -53,7 +61,8 @@ import com.carrotsearch.hppc.cursors.IntCursor;
  */
 public class MatthieuLatapyTriangleAlgorithm extends GrphAlgorithm<Result>
 {
-	public enum ALGORITHM {
+	public enum ALGORITHM
+	{
 		EDGE_ITERATOR, FORWARD, COMPACT_FORWARD
 	};
 
@@ -69,14 +78,15 @@ public class MatthieuLatapyTriangleAlgorithm extends GrphAlgorithm<Result>
 		this.algorithm = algorithm;
 	}
 
-	public static RegularFile executable = new RegularFile(Grph.COMPILATION_DIRECTORY, "tr");
+	public static RegularFile executable = new RegularFile(Grph.COMPILATION_DIRECTORY,
+			"tr");
 
 	@Override
 	public Result compute(Grph g)
 	{
 		ensureCompiled();
 
-		if (!g.isSimple())
+		if ( ! g.isSimple())
 			throw new IllegalArgumentException();
 
 		if (g.getEdges().size() < 3)
@@ -95,14 +105,17 @@ public class MatthieuLatapyTriangleAlgorithm extends GrphAlgorithm<Result>
 			byte[] inputText = createInputText(g);
 
 			// calling the external program
-			String output = new String(Proces.exec(executable.getPath(), inputText, "-c", "-cc", '-' + algo));
+			String output = new String(Proces.exec(executable.getPath(), inputText, "-c",
+					"-cc", '-' + algo));
 
 			// parsing the output text
 			List<String> outputLines = TextUtilities.splitInLines(output);
 			Result r = new Result();
-			r.numberOfTriangles = Integer.valueOf(outputLines.get(0).substring(6, outputLines.get(0).indexOf("triangles...") - 1));
+			r.numberOfTriangles = Integer.valueOf(outputLines.get(0).substring(6,
+					outputLines.get(0).indexOf("triangles...") - 1));
 			r.avgClusteringCoefficient = Double.valueOf(outputLines.get(1).substring(12));
-			r.globalClusteringCoefficient = Double.valueOf(outputLines.get(2).substring(11));
+			r.globalClusteringCoefficient = Double
+					.valueOf(outputLines.get(2).substring(11));
 			return r;
 		}
 
@@ -110,13 +123,14 @@ public class MatthieuLatapyTriangleAlgorithm extends GrphAlgorithm<Result>
 
 	private void ensureCompiled()
 	{
-		if (!executable.exists())
+		if ( ! executable.exists())
 		{
 			JavaResource res = new JavaResource(getClass(), "tr.c");
 
 			try
 			{
-				ExternalProgram.compileCSource(res, Grph.COMPILATION_DIRECTORY, Grph.logger);
+				ExternalProgram.compileCSource(res, Grph.COMPILATION_DIRECTORY,
+						Grph.logger);
 			}
 			catch (IOException e)
 			{
@@ -132,7 +146,7 @@ public class MatthieuLatapyTriangleAlgorithm extends GrphAlgorithm<Result>
 		b.append('\n');
 
 		// write degrees
-		for (IntCursor c : g.getVertices())
+		for (IntCursor c : IntCursor.fromFastUtil(g.getVertices()))
 		{
 			int v = c.value;
 			b.append(v);
@@ -142,7 +156,7 @@ public class MatthieuLatapyTriangleAlgorithm extends GrphAlgorithm<Result>
 		}
 
 		// write adjacencies
-		for (IntCursor c : g.getEdges())
+		for (IntCursor c :IntCursor.fromFastUtil( g.getEdges()))
 		{
 			int e = c.value;
 			int a = g.getOneVertex(e);

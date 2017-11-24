@@ -1,156 +1,169 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
  
- package grph.algo;
+ 
 
-import grph.Grph;
-import grph.algo.topology.ClassicalGraphs;
+package grph.algo;
 
 import java.util.Arrays;
 import java.util.Collection;
 
-import toools.set.DefaultIntSet;
-import toools.set.IntSet;
+import grph.Grph;
+import grph.algo.topology.ClassicalGraphs;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import toools.collections.primitive.SelfAdaptiveIntSet;
+import toools.collections.primitive.LucIntSet;
 
 public class BiconnectedComponents
 {
-    public static IntSet computeCutEdges(Grph g)
-    {
-	return computeCutEdges(computeArticulationPoints(g), g);
-    }
-
-    public static Collection<IntSet> computeBiconnectedComponents(Grph g)
-    {
-	Grph h = g.clone();
-	h.removeEdges(computeCutEdges(g));
-	return h.getConnectedComponents();
-    }
-
-    public static IntSet computeArticulationPoints(Grph g)
-    {
-	int n = g.getVertices().size();
-	int[] low = new int[n];
-	Arrays.fill(low, -1);
-	int[] pre = new int[n];
-	Arrays.fill(pre, -1);
-	IntSet articulation = new DefaultIntSet();
-
-	for (int v : g.getVertices().toIntArray())
+	public static IntSet computeCutEdges(Grph g)
 	{
-	    if (pre[v] == -1)
-	    {
-		dfs(g, v, v, articulation, low, pre, 0);
-	    }
+		return computeCutEdges(computeArticulationPoints(g), g);
 	}
 
-	return articulation;
-    }
-
-    private static IntSet dfs(Grph g, int u, int v, IntSet articulation, int[] low, int[] pre, int cnt)
-    {
-	int children = 0;
-	pre[v] = cnt++;
-	low[v] = pre[v];
-
-	for (int w : g.getOutNeighborhoods()[v])
+	public static Collection<IntSet> computeBiconnectedComponents(Grph g)
 	{
-	    if (pre[w] == -1)
-	    {
-		children++;
-		dfs(g, v, w, articulation, low, pre, cnt);
+		Grph h = g.clone();
+		h.removeEdges(computeCutEdges(g));
+		return h.getConnectedComponents();
+	}
 
-		// update low number
-		low[v] = Math.min(low[v], low[w]);
+	public static IntSet computeArticulationPoints(Grph g)
+	{
+		int n = g.getVertices().getGreatest() + 1;
+		int[] low = new int[n];
+		Arrays.fill(low, - 1);
+		int[] pre = new int[n];
+		Arrays.fill(pre, - 1);
+		IntSet articulation = new SelfAdaptiveIntSet();
 
-		// non-root of DFS is an articulation point if low[w] >= pre[v]
-		if (low[w] >= pre[v] && u != v)
+		for (int v : g.getVertices().toIntArray())
 		{
-		    articulation.add(v);
+			if (pre[v] == - 1)
+			{
+				dfs(g, v, v, articulation, low, pre, 0);
+			}
 		}
-	    }
-	    else if (w != u)
-	    {
-		// update low number - ignore reverse of edge leading to v
-		low[v] = Math.min(low[v], pre[w]);
-	    }
+
+		return articulation;
 	}
 
-	// root of DFS is an articulation point if it has more than 1 child
-	if (u == v && children > 1)
+	private static IntSet dfs(Grph g, int u, int v, IntSet articulation, int[] low,
+			int[] pre, int cnt)
 	{
-	    articulation.add(v);
-	}
+		int children = 0;
+		pre[v] = cnt++;
+		low[v] = pre[v];
 
-	return articulation;
-    }
-
-    public static IntSet computeCutEdges(IntSet articulationPoints, Grph g)
-    {
-	IntSet cutEdges = new DefaultIntSet();
-
-	for (int a : articulationPoints.toIntArray())
-	{
-	    for (int b : articulationPoints.toIntArray())
-	    {
-		if (a != b)
+		for (int w : g.getOutNeighborhoods()[v])
 		{
-		    cutEdges.addAll(g.getEdgesConnecting(a, b));
+			if (pre[w] == - 1)
+			{
+				children++;
+				dfs(g, v, w, articulation, low, pre, cnt);
+
+				// update low number
+				low[v] = Math.min(low[v], low[w]);
+
+				// non-root of DFS is an articulation point if low[w] >= pre[v]
+				if (low[w] >= pre[v] && u != v)
+				{
+					articulation.add(v);
+				}
+			}
+			else if (w != u)
+			{
+				// update low number - ignore reverse of edge leading to v
+				low[v] = Math.min(low[v], pre[w]);
+			}
 		}
-	    }
+
+		// root of DFS is an articulation point if it has more than 1 child
+		if (u == v && children > 1)
+		{
+			articulation.add(v);
+		}
+
+		return articulation;
 	}
 
-	return cutEdges;
-    }
-
-    // test client
-    public static void main(String[] args)
-    {
-	int s = 3;
-	Grph g = ClassicalGraphs.grid(s, s);
-	Grph h = ClassicalGraphs.grid(s, s);
-	Grph p = ClassicalGraphs.grid(s, s);
-	g.addGraph(h);
-	g.addGraph(p);
-	g.addUndirectedSimpleEdge(6, 10);
-	g.addUndirectedSimpleEdge(14, 21);
-	g.display();
-
-	BiconnectedComponents bic = new BiconnectedComponents();
-	IntSet ap = bic.computeArticulationPoints(g);
-	// print out articulation points
-	g.highlightVertices(ap, 6);
-	g.highlightEdges(computeCutEdges(g), 6);
-	System.out.println("ap " + ap);
-
-	for (IntSet bc : computeBiconnectedComponents(g))
+	public static IntSet computeCutEdges(IntSet articulationPoints, Grph g)
 	{
-	    g.highlightVertices(bc);
+		IntSet cutEdges = new SelfAdaptiveIntSet();
+
+		for (int a : articulationPoints.toIntArray())
+		{
+			for (int b : articulationPoints.toIntArray())
+			{
+				if (a != b)
+				{
+					cutEdges.addAll(g.getEdgesConnecting(a, b));
+				}
+			}
+		}
+
+		return cutEdges;
 	}
-    }
+
+	// test client
+	public static void main(String[] args)
+	{
+		int s = 3;
+		Grph g = ClassicalGraphs.grid(s, s);
+		Grph h = ClassicalGraphs.grid(s, s);
+		Grph p = ClassicalGraphs.grid(s, s);
+		g.addGraph(h);
+		g.addGraph(p);
+		g.addUndirectedSimpleEdge(6, 10);
+		g.addUndirectedSimpleEdge(14, 21);
+		g.display();
+
+		BiconnectedComponents bic = new BiconnectedComponents();
+		IntSet ap = bic.computeArticulationPoints(g);
+		// print out articulation points
+		g.highlightVertices(ap, 6);
+		g.highlightEdges(computeCutEdges(g), 6);
+		System.out.println("ap " + ap);
+
+		for (IntSet bc : computeBiconnectedComponents(g))
+		{
+			g.highlightVertices(bc);
+		}
+	}
 
 }

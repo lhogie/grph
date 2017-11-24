@@ -1,0 +1,13 @@
+#TeXlipse project settings
+#Mon Oct 24 08:17:25 CEST 2011
+builderNum=2
+outputDir=
+makeIndSty=
+bibrefDir=
+outputFormat=pdf
+tempDir=tmp
+mainTexFile=graph-ds.tex
+outputFile=graph-ds.pdf
+langSpell=en
+markDer=true
+srcDir=

@@ -1,0 +1,548 @@
+\documentclass{article}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\codeblock}[1]{\vspace{1mm}\noindent\begin{center}\texttt{#1}\end{center}\vspace{1mm}}
+
+\newcommand{\complexity}[2]{This algorithm runs in $\Theta(#1)$. #2}
+ 
+\usepackage{xspace}
+\usepackage[colorlinks,linkcolor=black]{hyperref}
+\usepackage{url}
+\usepackage{listings}
+%\usepackage[utf8]{inputenc}
+
+
+\newcommand{\grph}{\textsl{Grph}\xspace}
+
+\title{\grph: list of algorithms}
+\author{
+Luc Hogie (CNRS),
+{Aur\'elien Lancin (INRIA),}
+{Issam Tahiri (INRIA),}\\
+{GrŽgory Morel (INRIA),}
+{Nathan Cohen (INRIA)},
+{David Coudert (INRIA)}}
+
+\setcounter{tocdepth}{5}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{footnotesize}
+\tableofcontents
+\end{footnotesize}
+\newpage
+
+
+
+\section{Traversal}
+
+Graph traversal algorithms are designed in the form of ``abstract
+traversers'', which means that at each step of the traversal, they invoke dedicated abstract method that the user need to implement in order to meet its needs.
+
+\subsection{Breadth First Search}
+
+Breadth-first search (BFS) is a graph search algorithm that begins at the root node and explores all the neighboring nodes. Then for each of those nearest nodes, it explores their unexplored neighbor nodes, and so on, until it finds the goal, if any.
+
+
+\subsection{Depth First Search}
+
+Depth-first search (DFS)  starts at the root and explores as far as possible along each branch before backtracking.
+
+\subsection{Random Search}
+
+The random search starts from a given root node and select a random neighbor as the next step. It does not guarantee that the
+entire graph will be visited, even though it is connected. Nodes may be visited several times. 
+
+\subsubsection{Single visit}
+
+An adaptation of the previously described scheme, but ensures that any single node will be visited only once.
+
+
+\subsection{Parallelization}
+
+When searches are requested for multiple source, they are computed in parallel. To do this \grph instantiates 4 times more threads than cores on the computer.
+
+
+\section{Shortest paths}
+The shortest path problem is the problem of finding a path between two vertices (or nodes) such that the sum of the weights of its constituent edges is minimized. An example is finding the quickest way to get from one location to another on a road map; in this case, the vertices represent locations and the edges represent segments of road and are weighted by the time needed to travel that segment.
+
+
+\subsection{K-Shortest paths}
+\grph provides a bridge to an implementation of Yen's algorithms, hosted at
+Google code \url{http://code.google.com/p/k-shortest-paths/}.
+
+
+\subsection{BFS-based}
+\subsection{Dijkstra}
+
+Dijkstra's algorithm, conceived by Dutch computer scientist Edsger Dijkstra in 1956 and published in 1959,[1][2] is a graph search algorithm that solves the single-source shortest path problem for a graph with nonnegative edge path costs, producing a shortest path tree. 
+
+
+\subsection{Bellman-Ford}
+
+The Bellman-Ford algorithm computes single-source shortest paths in a weighted
+digraph. For graphs with only non-negative edge weights, the faster Dijkstra's algorithm also solves the problem. Thus, Bellman-Ford is used primarily for graphs with negative edge weights.
+
+\subsubsection{David mod}
+
+This modification uses two correlated stacks.
+
+\subsection{Floyd Warshall}
+
+
+\section{Clustering}
+
+\subsection{Kernighan-Lin}
+
+
+
+\complexity{n^2 log(n)}{}
+
+Kernighan-Lin is an heuristic algorithm for solving the graph partitioning
+problem. The algorithm has important applications in the layout of digital circuits and components in VLSI.
+
+\subsection{Number of triangles}
+
+Two algorithms counting the number of triangles in a graph are implemented in
+\grph.
+
+\subsubsection{Native}
+
+Implemented in C. Uses Matthieu Latapy (LIP6) source code.
+\subsubsection{Matrix-based}
+
+Developed by Gregoy Morel
+
+
+\subsection{List all triangles}
+
+\subsection{List all paths}
+
+\subsection{List all cycles}
+
+
+\subsection{Finding cliques}
+
+Uses the C implementation of \texttt{Cliquer}, developped by Patric R. J.
+\"Osterg\.ard, Professor at Aalto University (Finland).
+
+\url{http://users.tkk.fi/pat/cliquer.html}
+
+
+\section{Distances}
+
+\subsection{Distance matrix}
+
+The graph distance matrix, sometimes also called the all-pairs shortest path matrix, is the square matrix $d_{i,j}$ consisting of all graph distances from vertex $v_i$ to vertex $v_j$. 
+
+\subsection{Eccentricity}
+
+The eccentricity $\epsilon(v)$ of a graph vertex $v$ in a connected graph $G$ is the maximum graph distance between $v$ and any other vertex $u$ of $G$. For a disconnected graph, all vertices are defined to have infinite eccentricity. 
+
+\subsection{Radius}
+
+The radius of a graph is the minimum graph eccentricity of any graph vertex in a graph. 
+
+\subsection{Diameter}
+
+The length $max_{u,v}d(u,v)$ of the "longest shortest path" (i.e., the longest graph geodesic) between any two graph vertices $(u,v)$ of a graph, where $d(u,v)$ is a graph distance. In other words, a graph's diameter is the largest number of vertices which must be traversed in order to travel from one vertex to another when paths which backtrack, detour, or loop are excluded from consideration. 
+
+\subsection{Center vertex}
+\subsubsection{Minimum eccentricity}
+\subsubsection{Two sweeps}
+Starts from any node. Performs one BFS and choose the farthest node as the new source.
+Performs another BFS and returns the node in the middle of the path between the source and the farthest node.
+
+
+
+\subsubsection{Distance matrix-based diameter}
+
+\complexity{n^2}{$n$ being the number of vertices in the graph.}
+
+\subsubsection{Two sweeps}
+Also called two-sweeps diameter approximation.
+Gives a lower bound.
+
+\complexity{2n}{}
+
+\subsubsection{Four sweeps}
+Also called two-sweeps diameter approximation.
+Gives a lower bound.
+
+This is a contribution of Laurent Viennot.
+
+
+\subsection{Shortest cycle and girth}
+It is possible to compute a shortest cycle, and consequently the \textit{girth} of a graph (defined as the length of a shortest cycle) by calling the methods \texttt{getShortestCycle()} and \texttt{getGirth()}.
+
+\section{Connected components}
+
+A  connected component of an undirected graph is a subgraph in which any two vertices are connected to each other by paths, and which is connected to no additional vertices.
+
+\subsection{Set of connected components}
+
+
+\subsection{Connected component containing a given vertex}
+
+\section{Cuts}
+
+A cut is a partition of the vertices of a graph into two disjoint subsets. The cut-set of the cut is the set of edges whose end points are in different subsets of the partition. Edges are said to be crossing the cut if they are in its cut-set.
+
+\subsection{Test if  two vertex sets form a cut in the graph}
+\subsection{Test if a set of vertex sets form a cut in the graph}
+\subsection{Computes the set of edges of a given cut}
+\subsection{Computes the size of given cut}
+
+
+\subsection{Sparse cut}
+Written by Issam Tahari
+
+\section{Navigation}
+
+
+
+\subsection{Adjacency matrix}
+
+The adjacency matrix, sometimes also called the connection matrix, of a simple graph is a matrix with rows and columns labelled by graph vertices, with a 1 or 0 in position $(v_i,v_j)$ according to whether $v_i$ and $v_j$ are adjacent or not. For a simple graph with no self-loops, the adjacency matrix must have 0s on the diagonal. For an undirected graph, the adjacency matrix is symmetric. 
+
+
+\subsection{Incidence matrix}
+
+The incidence matrix of a graph gives the (0,1)-matrix which has a row for each vertex and column for each edge, and (v,e)=1 iff vertex v is incident upon edge e (Skiena 1990, p. 135). However, some authors define the incidence matrix to be the transpose of this, with a column for each vertex and a row for each edge.
+
+\subsection{Degrees}
+
+Consider in/out edge/vertex degrees.
+
+\subsection{Clustering coefficient}
+
+A clustering coefficient is a measure of degree to which nodes in a graph tend to cluster together. Evidence suggests that in most real-world networks, and in particular social networks, nodes tend to create tightly knit groups characterised by a relatively high density of ties.
+\subsection{Set of edges connecting two given  vertices}
+\subsection{Set of edges incident to two given  vertices}
+\subsection{Headless/tailless edges}
+\subsection{In/out neighbors}
+\subsection{Isolated vertices}
+
+Returns the set of vertices that have no incident edge.
+
+
+\subsection{Loops}
+
+Returns the of edges that are self-loops.
+
+\subsection{Set of vertices at a given distance}
+
+Returns the set of vertices at the given distance.
+
+\subsection{Set of vertices incident to a given edge}
+\subsection{Set of vertices with a given in/out degree}
+
+
+\subsection{Inclusion}
+
+Test if a given graph is included in another graph.
+ 
+\subsection{Equality} 
+
+Test if a given graph equals another graph.
+
+\subsection{Difference detection} 
+
+Reports the difference with two given graphs.
+
+\subsection{Cloning} 
+
+Builds a clone of the given graph. Topology and properties are duplicated.
+
+\section{Structural tests}
+
+
+
+\subsection{Connected}; A graph which is connected in the sense of a topological space, i.e., there is a path from any point to any other point in the graph. A graph that is not connected is said to be disconnected. This definition means that the null graph and singleton graph are considered connected, while empty graphs on n>=2 nodes are disconnected.
+
+\subsection{Complete} A complete graph is a graph in which each pair of graph vertices is connected by an edge. 
+
+\subsection{Null} The term "null graph" is used both to refer to any empty graph and to the empty graph on 0 nodes. 
+\subsection{Reflexive} A reflexive graph is a pseudograph such that each vertex has an associated graph loop. 
+\subsection{Regular} A graph is said to be regular of degree r if all local degrees are the same number r. A 0-regular graph is an empty graph, a 1-regular graph consists of disconnected edges, and a 2-regular graph consists of disconnected cycles. The first interesting case is therefore 3-regular graphs, which are called cubic graphs.
+\subsection{Trivial}
+\subsection{Simple} A simple graph, also called a strict graph, is an unweighted, undirected graph containing no graph loops or multiple edges.
+\subsection{Tree}
+\subsection{Chordal}
+\subsection{Hypergraph} An hypergraph is a graph in which generalized edges (called hyperedges) may connect more than two nodes. A connection between two or more vertices of a hypergraph. A hyperedge connecting just two vertices is simply a usual graph edge. 
+\subsection{Multigraph}; The term multigraph refers to a graph in which multiple edges between nodes are either permitted (Harary 1994, p. 10; Gross and Yellen 1999, p. 4) or required.
+\subsection{Irreflexive}
+\subsection{Acyclic}
+
+\subsection{Hamiltonian}
+\subsubsection{Ore's theorem}
+\subsubsection{Dirac's theorem}
+
+\subsection{Anti-graph}
+
+An anti-graph is an orientation of a graph where every vertex is a source or a sink.
+
+\subsection{Bipartiteness}
+
+
+\section{Topology generators}
+
+http://sndlib.zib.de/home.action
+
+\subsection{GNM}
+
+Erdos and Renyi GNM model: adds $m$ edges to a graph of $n$ vertices, connecting random pairs of vertices.
+
+The maximum number of edges is $x = n (n -1) / 2$. If $m > x$ then the generator starts by constructing a clique
+of all vertices from which it then  randomly removes $x - m$ edges.
+
+\subsection{GNP}
+
+Erdos and Renyi GNP model: connect each pair of vertices according to a given probability.
+
+\subsection{Clique}
+
+Connect the vertices in the graph as a clique. Vertices are connected to all others. Previously existing edges are ignored.
+
+
+\subsection{Bus}
+
+Connect the vertices in the graph as a bus: they are all included in a new undirected hyper-edge.
+Previously existing edges are ignored.
+
+
+\subsection{Chain}
+
+For instance, the chain topology model can be used to model in-line networks following railways, enabling train passengers to connect to the internet.
+
+\subsection{Star}
+\subsection{Grid}
+
+Connect the vertices in the graph as a grid.
+
+\subsection{Inet}
+
+Inet, currently at version 3.0, is an Autonomous System (AS) level Internet topology generator. 
+
+
+\subsection{Wireless backhaul}
+
+Degenerates a grid in the following manner: the farther is an edge from the initial node, the more probability it has to
+be deleted. An edge is never deleted if deleting it would result in disconnecting the graph.
+
+\subsection{Ad hoc network}
+
+A wireless ad hoc network is a decentralized wireless network.[1] The network is ad hoc because it does not rely on a preexisting infrastructure, such as routers in wired networks or access points in managed (infrastructure) wireless networks. Instead, each node participates in routing by forwarding data for other nodes, and so the determination of which nodes forward data is made dynamically based on the network connectivity.
+
+\subsection{Random Newman Watts Strogatz}
+
+From the SageMath documentation: First create a ring over n nodes.
+				Then each node in the ring is connected with its k nearest
+				neighbors. Then shortcuts are created by adding new edges as
+				follows: for each edge u-v in the underlying '$n-$ring with k nearest'
+				neighbors'; with probability p add a new edge $u-w$ with" + "randomly-chosen existing node w.
+
+\subsection{Random tree}
+\subsection{Ring}
+
+Connect the vertices in the graph as a ring. Previously existing edges are ignored.
+
+\subsection{Chordal}
+\subsection{Brite}
+
+Uses the external Brite topology generator.
+BRITE supports multiple generation models including models for flat AS, flat Router and hierarchical topologies.
+
+\subsection{GLP}
+\subsection{R-mat} The R-mat topology generator is implemented in C.
+
+
+\section{Input/Output}
+\subsection{DOT/GraphViz}
+
+DOT is a plain text graph description language. It is a simple way of describing graphs that both humans and computer programs can use. DOT graphs are typically files that end with the .gv (or .dot) extension.
+Various programs can process DOT files. Some, like dot, neato, twopi, circo, fdp, and sfdp, will read a DOT file and render it in graphical form. Others, like gvpr, gc, accyclic, ccomps, sccmap, and tred, will read a DOT file and perform calculations on the represented graph. Finally, others, like GVedit, KGraphEditor, lefty, dotty, and grappa, provide an interactive interface.
+
+\subsection{Dimacs}
+
+
+
+\subsection{LAD}
+
+
+
+\subsection{GraphML}
+
+GraphML is an XML-based file format for graphs. The GraphML file format results from the joint effort of the graph drawing community to define a common format for exchanging graph structure data. It uses an XML-based syntax and supports the entire range of possible graph structure constellations including directed, undirected, mixed graphs, hypergraphs, and application-specific attributes.
+
+\subsection{GML}
+
+Graph Modelling Language (GML) is a hierarchical ASCII-based file format for describing graphs. It has been also named Graph Meta Language.
+
+
+\subsection{DGS (read-only)}
+
+DGS is the native format used by the GraphStream graph rendering tool. DGS is suited to the description of dynamic graphs.
+
+\subsection{Grph binary}
+
+This format is native to the \grph project. It encodes graphs in a compact  sequence of bytes. It is not human-readable.
+
+\subsection{Grph text}
+
+This format is native to the \grph project. It encodes graphs in a compact  sequence of ASCII characters. It is meant to be
+compact and easily editable by humans.
+
+
+\section{Unclassified}
+
+
+\subsection{Subgraph isomorphism}
+
+Written by Nathann Cohen
+
+\subsection{Graph label-based pattern matching}
+
+This algorithm performs graph pattern matching, on the basis of vertex/edge
+labels.
+
+A graph pattern is given on the form of a set regular expressions. Each regular
+expression denotes a path in the graph. More precisely, a regular expression matches (or not) the
+concatenated labels of the elements (vertices and/or edges) found in a
+given path.
+
+The algorithm performs as follows:
+\begin{enumerate}
+  \item it enumerates all paths in the graph;
+  \item it computes the textual representation for every path;
+  \item it constructs a dictionary associating to every regular
+  expression the set of paths which match it;
+  \item it computes all combinaisons of paths matching the set of regular
+  expression and the sub-graph corresponding to each combinaison. 
+\end{enumerate}
+
+Each sub-graph has a minimal set of paths matching
+the input regular expressions.
+
+
+
+\subsection{Transitive closure}
+
+Written by Julien Fighera
+
+
+\subsection{Line graph}
+
+\subsection{Pruning}
+
+\subsection{Evolutionary creation of graph instances}
+
+
+
+\subsection{Random-walk based centrality}
+
+Based on a random walk.
+
+
+\subsection{Graph isomorphism}
+
+Integration of Brendan McKay C code (Nauty).
+
+\subsection{Subgraph isomorphism}
+
+LAD is a program for solving subgraph isomorphism problem.
+It is written by Christine SOLNON, Professor at LIRIS, INSA  (Lyon, France).
+
+\url{http://liris.cnrs.fr/csolnon/LAD.html}
+
+\subsection{Full-featured subgraph isomorphism}
+
+Based on LAD. Support direction and properties.
+
+
+
+\subsection{Maximum clique}
+
+The computation of the maximum clique is delegated to program AntClique.
+AntClique is a program for solving maximum clique problems.
+It is written by Christine SOLNON, Professor at LIRIS, INSA  (Lyon, France).
+
+\url{http://liris.cnrs.fr/csolnon/AntClique.html}
+
+On request of the maximum clique, Grph runs AntClique in a new process and interact with it using standard input/output streams.
+If the executable file of AntClique is not found (which is very likely at the first call), it will
+compile the source code on-the-fly.
+
+
+\subsection{Topological sort}
+
+\subsection{Complement}
+
+The complement (or inverse) of a graph G is a graph H on the same vertices such that two vertices of H are adjacent if and only if they are not adjacent in G.
+
+\section{Set operations}
+
+Inclusion, suppression, addition, difference, union.
+
+
+\section{Value distribution}
+
+The result of methods returning set of values (one value per vertex) can be further computed so as to generate
+distribution of these values.
+
+
+
+\section{Covering and packing}
+\subsection{Minimum Vertex Cover}
+The Minimum Vertex Cover problem aims at finding a set $S$ of vertices of minimum cardinality such that each edge has at least one endpoint in $S$.
+
+\subsubsection{BruteForceMinimumVertexCoverAlgorithm}
+This algorithm simply tests the $2^n$ subsets of vertices of the graphs (where $n$ is the number of vertices of graphs), and thus offers poor performance.
+
+\subsubsection{BranchingMinimumVertexCoverAlgorithm}
+This algorithm, of complexity $O(1.47^n)$, is a refinement of the previous one, based on the simple observation that either a vertex $v$ belongs to the cover, or all its neighbors must belong to. It is described in details in Niedermeier's book \textit{Invitation to fixed-parameter algorithms}, p.90.
+
+\subsubsection{NiedermeierMinimumVertexCoverAlgorithm}
+This is the $O(1.33^k)$ Bounded Search Tree algorithm, as explained in Niedermeier's book (see above for a reference), pp. 98--101. It offers good performances in practice.
+
+\subsection{Maximum Matching}
+The Maximum Matching problem aims at finding a set $S$ of edges of maximum cardinality such that no two edges of $S$ share a common endpoints. Edmonds has provided the well-known blossom algorithm for solving this problem, so showing it is polynomial.
+
+\subsubsection{BipartiteMaximumMatchingAlgorithm}
+Algorithm based on flows for the special case where the graph is bipartite.
+
+\subsubsection{LPBasedMaximumMatchingAlgorithm}
+Solves the Maximum Matching problem by formulating it as an Integer Program, then calling the specified solver.
+
+\subsection{Maximum Independent Set}
+The Maximum Independent Set problem aims at finding a set $S$ of vertices of maximum cardinality such that at most one endpoint of each edge belongs to $S$. Thus, an independent set is the complement of a vertex cover, and we can use Minimum Vertex Cover algorithms to solve Maximum Independent Set problem.
+
+\subsubsection{LPBasedMaximumIndependentSetAlgorithm}
+Solves the Maximum Indepensent Set problem by formulating it as an Integer Program, then calling the specified solver.
+
+\subsubsection{FominGrandoniKratschMaximumindependentSetAlgorithm}
+This is an implementation of the algorithm proposed by Fomin, Grandoni and Kratsch for computing a maximum independent set, based on \textit{foldable vertices} and \textit{mirroring}, in F.V. Fomin, F. Grandoni, and D. Kratsch, \textit{A measure \& conquer approach for the analysis of exact algorithms}, Journal of the ACM (JACM), vol.56-5, p.25, 2009, ACM.
+
+\section{Coloring}
+\subsection{Chromatic number}
+When used without any qualification, a coloring of a graph is almost always a proper vertex coloring, namely a labelling of the graphs vertices with colors such that no two vertices sharing the same edge have the same color.
+The smallest number of colors needed to color a graph G is called its chromatic number.
+\subsection{BipartitenessAlgorithm}
+Implementation of the bipartite testing algorithm. The algorithm traverses
+ the graph with depth-first search and tries to color vertices properly with
+ two colors. If it fails, the graph is not bipartite.
+
+
+\section{Coloring}
+\subsection{OGDF}
+
+
+
+
+
+\bibliographystyle{plain}
+\bibliography{grph}
+
+\end{document}

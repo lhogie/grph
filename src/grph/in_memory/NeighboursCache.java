@@ -1,39 +1,51 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
+ 
+ 
 
 package grph.in_memory;
 
 import grph.Grph;
 import grph.TopologyListener;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import toools.collections.AutoGrowingArrayList;
-import toools.set.IntSet;
-
-import com.carrotsearch.hppc.cursors.IntCursor;
+import toools.collections.primitive.IntCursor;
+import toools.collections.primitive.LucIntSet;
 
 abstract class NeighboursCache_OLD
 {
@@ -131,7 +143,7 @@ abstract class NeighboursCache_OLD
 		public void undirectedHyperEdgeRemoved(Grph graph, int edge,
 				IntSet incidentVertices)
 		{
-			for (IntCursor v : incidentVertices)
+			for (IntCursor v : IntCursor.fromFastUtil(incidentVertices))
 			{
 				neighborSets.set(v.value, null);
 			}
@@ -141,12 +153,12 @@ abstract class NeighboursCache_OLD
 		public void directedHyperEdgeRemoved(Grph graph, int edge,
 				IntSet src, IntSet dest)
 		{
-			for (IntCursor v : src)
+			for (IntCursor v : IntCursor.fromFastUtil(src))
 			{
 				neighborSets.set(v.value, null);
 			}
 
-			for (IntCursor v : dest)
+			for (IntCursor v : IntCursor.fromFastUtil(dest))
 			{
 				neighborSets.set(v.value, null);
 			}
@@ -156,7 +168,7 @@ abstract class NeighboursCache_OLD
 		public void vertexAddedToDirectedHyperEdgeTail(Grph graph,
 				int e, int v)
 		{
-			for (IntCursor s : graph.getDirectedHyperEdgeHead(e))
+			for (IntCursor s : IntCursor.fromFastUtil(graph.getDirectedHyperEdgeHead(e)))
 			{
 				neighborSets.set(s.value, null);
 			}
@@ -168,7 +180,7 @@ abstract class NeighboursCache_OLD
 		public void vertexAddedToDirectedHyperEdgeHead(Grph graph,
 				int e, int v)
 		{
-			for (IntCursor s : graph.getDirectedHyperEdgeTail(e))
+			for (IntCursor s : IntCursor.fromFastUtil(graph.getDirectedHyperEdgeTail(e)))
 			{
 				neighborSets.set(s.value, null);
 			}
@@ -179,7 +191,7 @@ abstract class NeighboursCache_OLD
 		public void vertexAddedToUndirectedSimpleEdge(Grph graph,
 				int edge, int vertex)
 		{
-			for (IntCursor s : graph.getUndirectedHyperEdgeVertices(edge))
+			for (IntCursor s : IntCursor.fromFastUtil(graph.getUndirectedHyperEdgeVertices(edge)))
 			{
 				neighborSets.set(s.value, null);
 			}
@@ -191,7 +203,7 @@ abstract class NeighboursCache_OLD
 		public void vertexRemovedFromUndirectedHyperEdge(Grph g,
 				int edge, int vertex)
 		{
-			for (IntCursor s : g.getUndirectedHyperEdgeVertices(edge))
+			for (IntCursor s : IntCursor.fromFastUtil(g.getUndirectedHyperEdgeVertices(edge)))
 			{
 				neighborSets.set(s.value, null);
 			}
@@ -203,7 +215,7 @@ abstract class NeighboursCache_OLD
 		public void vertexRemovedFromDirectedHyperEdgeTail(Grph g,
 				int e, int v)
 		{
-			for (IntCursor s : g.getDirectedHyperEdgeHead(e))
+			for (IntCursor s : IntCursor.fromFastUtil(g.getDirectedHyperEdgeHead(e)))
 			{
 				neighborSets.set(s.value, null);
 			}
@@ -215,7 +227,7 @@ abstract class NeighboursCache_OLD
 		public void vertexRemovedFromDirectedHyperEdgeHead(Grph g,
 				int e, int v)
 		{
-			for (IntCursor s : g.getDirectedHyperEdgeTail(e))
+			for (IntCursor s : IntCursor.fromFastUtil(g.getDirectedHyperEdgeTail(e)))
 			{
 				neighborSets.set(s.value, null);
 			}

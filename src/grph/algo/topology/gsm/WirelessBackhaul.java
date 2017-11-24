@@ -1,50 +1,59 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
 
 package grph.algo.topology.gsm;
-
-import grph.Grph;
-import grph.algo.search.SearchResult;
-import grph.algo.topology.AsymmetricTopologyGenerator;
-import grph.in_memory.InMemoryGrph;
-import grph.properties.NumericalProperty;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import grph.Grph;
+import grph.algo.search.SearchResult;
+import grph.algo.topology.AsymmetricTopologyGenerator;
+import grph.in_memory.InMemoryGrph;
+import grph.properties.NumericalProperty;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import toools.collections.primitive.LucIntSet;
+import toools.collections.primitive.SelfAdaptiveIntSet;
 import toools.math.MathsUtilities;
-import toools.set.DefaultIntSet;
-import toools.set.IntSet;
-
-import com.carrotsearch.hppc.IntObjectMap;
-import com.carrotsearch.hppc.IntObjectOpenHashMap;
 
 public class WirelessBackhaul
 {
@@ -52,7 +61,8 @@ public class WirelessBackhaul
 	Set<BSC> bscs = new HashSet<BSC>();
 	NumericalProperty edgeCapacities = new NumericalProperty("edge capacities", 32, 1);
 
-	public WirelessBackhaul(int numberOfBTSs, int numberOfBSCs, Random prng, double density)
+	public WirelessBackhaul(int numberOfBTSs, int numberOfBSCs, Random prng,
+			double density)
 	{
 		g = new InMemoryGrph();
 		int side = (int) Math.sqrt(numberOfBTSs);
@@ -66,7 +76,8 @@ public class WirelessBackhaul
 			// int distanceOfBSC = findBSC(e);
 			// System.out.println(distanceOfBSC);
 			// edgeCapacities.setValue(e, 100+200-distanceOfBSC);
-			edgeCapacities.setValue(e, (int) MathsUtilities.pickRandomBetween(100, 200, prng));
+			edgeCapacities.setValue(e,
+					(int) MathsUtilities.pickRandomBetween(100, 200, prng));
 		}
 
 		for (BSC bsc : bscs)
@@ -81,7 +92,6 @@ public class WirelessBackhaul
 			}
 		}
 	}
-
 
 	/**
 	 * Degenerates the given graph. Any connected graph is accepted.
@@ -113,20 +123,21 @@ public class WirelessBackhaul
 			if (r.nextDouble() < distanceRelativeToMaxDistance)
 			{
 				int h = g.getDirectedSimpleEdgeHead(e);
-				IntSet oppositeEdges = g.getOppositeEdges(e);
+				LucIntSet oppositeEdges = g.getOppositeEdges(e);
 				g.removeEdge(e);
 				g.removeEdge(oppositeEdges.getGreatest());
 
 				if (oppositeEdges.size() != 1)
 					throw new IllegalStateException();
 
-				if (!g.isStronglyConnected())
+				if ( ! g.isStronglyConnected())
 				{
 					g.addDirectedSimpleEdge(t, h);
 					g.addDirectedSimpleEdge(h, t);
 
 					if (++attempts == maxNumberOfAttempts)
-						throw new IllegalArgumentException("cannot reduce that much the density while maintaining the network strongly connected");
+						throw new IllegalArgumentException(
+								"cannot reduce that much the density while maintaining the network strongly connected");
 				}
 			}
 		}
@@ -135,7 +146,7 @@ public class WirelessBackhaul
 	public static Set<BSC> addBSCs(Grph g, int n, Random prng)
 	{
 		Set<BSC> r = new HashSet<BSC>();
-		IntSet BSCids = new DefaultIntSet();
+		IntSet BSCids = new SelfAdaptiveIntSet();
 
 		for (int i = 0; i < n; ++i)
 		{
@@ -157,7 +168,7 @@ public class WirelessBackhaul
 		if (s.isEmpty())
 			throw new IllegalArgumentException();
 
-		IntObjectMap<int[]> m = new IntObjectOpenHashMap<int[]>();
+		Int2ObjectMap<int[]> m = new Int2ObjectOpenHashMap<int[]>();
 
 		for (int v : s.toIntArray())
 		{
@@ -165,7 +176,7 @@ public class WirelessBackhaul
 		}
 
 		int maxComposedDistance = 0;
-		int farthest = -1;
+		int farthest = - 1;
 
 		for (int v : g.getVertices().toIntArray())
 		{
@@ -182,7 +193,7 @@ public class WirelessBackhaul
 
 	}
 
-	private static int composedDistance(Grph g2, int v, IntSet s, IntObjectMap<int[]> m)
+	private static int composedDistance(Grph g2, int v, IntSet s, Int2ObjectMap<int[]> m)
 	{
 		int sum = 0;
 
@@ -201,7 +212,7 @@ public class WirelessBackhaul
 
 	IntSet bscIDs()
 	{
-		IntSet r = new DefaultIntSet();
+		IntSet r = new SelfAdaptiveIntSet();
 
 		for (BSC b : bscs)
 		{

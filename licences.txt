@@ -1,0 +1,4 @@
+BeanShell	Sun Public License / Gnu Lesser Public License
+GraphStream	CeCILL-C (French version) and LGPL v3. 
+JLine		BSD license
+SVG Salamander		BSD license

@@ -1,0 +1,20 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Incidence lists}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Vertex-to-edge}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Edge-to-vertex}{section.2}% 4
+\BOOKMARK [1][-]{section.3}{Sets}{}% 5
+\BOOKMARK [2][-]{subsection.3.1}{State of the Art}{section.3}% 6
+\BOOKMARK [2][-]{subsection.3.2}{Description of the problem}{section.3}% 7
+\BOOKMARK [1][-]{section.4}{Dynamic array-based data structures}{}% 8
+\BOOKMARK [2][-]{subsection.4.1}{Hashsets}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.2}{Bitsets}{section.4}% 10
+\BOOKMARK [3][-]{subsubsection.4.2.1}{Hardware cache}{subsection.4.2}% 11
+\BOOKMARK [1][-]{section.5}{Self-adaptive data structure}{}% 12
+\BOOKMARK [2][-]{subsection.5.1}{Description}{section.5}% 13
+\BOOKMARK [2][-]{subsection.5.2}{Switch threshold}{section.5}% 14
+\BOOKMARK [2][-]{subsection.5.3}{The cost of switching implementation}{section.5}% 15
+\BOOKMARK [2][-]{subsection.5.4}{Minimization of cost of switching implementation}{section.5}% 16
+\BOOKMARK [2][-]{subsection.5.5}{Overhead of multiple implementation}{section.5}% 17
+\BOOKMARK [1][-]{section.6}{Benchmarks}{}% 18
+\BOOKMARK [2][-]{subsection.6.1}{Creation of the largest set possible}{section.6}% 19
+\BOOKMARK [1][-]{section.7}{Conclusion}{}% 20

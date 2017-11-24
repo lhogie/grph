@@ -1,0 +1,13 @@
+#TeXlipse project settings
+#Thu Jun 23 16:21:07 CEST 2011
+builderNum=2
+outputDir=
+makeIndSty=
+bibrefDir=
+outputFormat=pdf
+tempDir=tmp
+mainTexFile=grph-slides.tex
+outputFile=grph-slides.pdf
+langSpell=en
+markDer=true
+srcDir=

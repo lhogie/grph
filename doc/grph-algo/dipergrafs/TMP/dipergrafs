@@ -1,0 +1,723 @@
+\documentclass{article}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\codeblock}[1]{\vspace{1mm}\noindent\begin{center}\texttt{#1}\end{center}\vspace{1mm}}
+
+\usepackage{xspace}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{listings}
+\setcounter{tocdepth}{2}
+
+
+\newcommand{\dipergrafs}{\textsl{Dipergrafs}\xspace}
+
+\title{\dipergrafs: an efficient portable graph library tailored to network simulation and graph analysis}
+\author{
+Luc Hogie (CNRS),
+{\normalsize Aur\'elien Lancin (INRIA),}
+{\normalsize Issam Tahiri (INRIA),}\\
+{\footnotesize Nathan Cohen (INRIA)},
+{\footnotesize Fr\'ed\'eric Majorczik (IRISA),}
+{\scriptsize Christian Glacet (LaBRi),}
+{\tiny Fabrice Peix (CNRS)}}
+
+
+\begin{document}
+
+\maketitle
+\begin{footnotesize}
+\vfill
+\tableofcontents
+\end{footnotesize}
+\newpage
+
+\section{Introduction}
+
+The objective of the \dipergrafs project is to propose a Java 
+framework for the
+manipulation of directed hypergraphs.
+
+A directed
+hypergraph \cite{compref124, 751223, 687242} can be
+defined as a generalisation of a directed graph in which edges
+(then called \textit{hyperedges}) connect sets of vertices.
+
+
+
+Hypergraphs are used into the fields of rational databases
+\cite{319078}, semantic web \cite{conf/esws/Morales07}, route
+planning \cite{898038}, network modelling \cite{898088}, expert
+systems \cite{10.1109/69.591448}.
+Our first motivation for developing \dipergrafs was to
+be able to simulate network traffic, considering data transmissions
+on shared mediums, such as bussed and wireless networks. 
+Networks are generally represented by directed graphs.
+This model comes from the assumption that a network link
+connects two nodes and that communication directions are independent.
+But in a number of networks (bus, wireless, etc) these
+assumptions go too far. In such networks, not only 
+communication directions impact one another, but communications
+generally impact others.
+These networks hence  cannot be represented as directed graph.
+Indeed in such networks set of nodes are  connected to
+other sets of nodes with no
+general restriction on the content of these sets.
+In the specific case of bus networks
+all nodes are connected together.
+Such models are feasible using directed graphs by considering 
+dummy vertices which represent sets of nodes, but
+doing this leads to inelegant models.
+Hypergraphs solve the problem for their structure is a perfect match.
+
+There exist numerous graph frameworks on the market. Most mature projects
+include
+Mascopt \cite{LSV04}, GraphStream \cite{Dutot2007}, Boost \cite{504206},
+JGraphT \cite{}, JUNG \cite{jung}, the hypergraph project, etc. 
+Unfortunately most of these frameworks suffer from a lack of
+support for hypergraphs. Also their design is
+either complicated, limiting or directed to graph rendering.
+Besides not all of them have Java implementations.
+
+Briefly \dipergrafs:
+\begin{itemize}
+	\item has a vertex-oriented design (in opposite to node-oriented design), that is
+	the graph is seen as a collection of relations between nodes;
+	\item imposes no constraint on the type of nodes and vertices
+	(in opposite to frameworks which oblige 
+	to follow a certain structure, to the detriment of flexibility);
+	\item is mostly usable through a small set of Java class (in opposite to
+	frameworks whose utilization require the knowledge of numerous classes);
+	\item features graph input/output mechanisms, allowing persistence,
+	serialization, etc;
+	\item does not feature any graph rendering tool. Instead bridges to
+	external products dedicated to rendering are provided.
+	\item provides the user with efficient implementation of basic
+	graph operations;
+	\item comes with a set of composeable topology generator allowing to quickly
+	instantiate the desired topology;
+	\item complies with the Java serialization API by allowing graphs to be
+	coded as binary data and vice-versa.
+\end{itemize}
+
+
+From a Java perpective, \dipergrafs is designed in pretty much the same way
+as associative tables (\texttt{java.util.Map} are: it defines relations
+between objects. While associative
+tables define unidirectional one-to-one relations, \dipergrafs defines
+bidirectional many-to-many ones. Internally \dipergrafs uses four
+correlated adjacency tables.
+
+\subsection{State of the Art}
+
+Numerous graph library are already available to the graph community.
+
+Non-Java users will stick with library dedicated to their preferred language, such as Boost for C++
+of SageMath for Python.
+
+Java users can choose in a plethora of frameworks. Most of them still are at an early stage of their development and would not
+be used in a production environment. Projects like JUNG, Apache Maths Commons and GraphT stand among the best.
+
+\subsection{Motivations for a new graph library}
+
+Unfortunately, in spite of the intrinsic qualities of each specific library, their all turn out to show limitations
+in either their computational performance,  the flexibility of their graph model, etc.
+
+The \dipergrafs project lies in the ambitious of providing  a graph library that is (as much as possible) efficient, general, easy to use
+and bug free.
+
+\section{Data models}
+\subsection{Graph model}
+
+	  \dipergrafs models directed hypergraphs, which include the following sub-classes:
+	  \begin{itemize}
+  \item simple graphs;
+  \item multigraphs;
+  \item any undirected, directed or mixed versions of these.
+\end{itemize}
+Note that half-edges (1 end), loose edges (no end) are supported. Directed hypergrafs make it also possible to model
+network bus.
+
+
+\subsubsection{No need for hyperlinks?}
+
+Then use singletons (1-element sets) as tail and heads for every edge.
+
+\subsubsection{No need for directed links?}
+
+Then use the same 2-elements set as the tail and head for every edge.
+
+
+Then use the same 2-elements set as the tail and head for every edge.
+
+\subsection{Vertex/edge model}
+
+	  \dipergrafs imposes no constraint on the type of nodes/edges. It can hence model:
+	  \begin{itemize}
+  \item weighed graphs;
+  \item colored graphs;
+  \item more generally, graphs with any properties on vertices and edges.
+	  \end{itemize}
+
+Vertices and edges are identified by an integer value. In practise, \dipergrafs uses the hashcode
+of Java object as their identifier.
+
+\section{Data structures}
+\dipergrafs comes with two implementations.
+
+\subsection{Based on hashtables}
+
+The hastable-based implementation is the easier to use.
+Because it relies on
+four coupled hashtables, it shows poor performance, both in terms of computational resource and  memory consumption.
+Unless you will manipulate small graph or you will not use graph algorithms, you better use the implementation based on incidence lists.
+
+\subsection{Based on incidence lists}
+
+This implementation, based on four coupled incidence lists, exhibit the best performance.
+It imposes than the identifier for the vertices/edges is positive. Also, it works best if
+the space of identifier is dense.
+
+ Operations are hence performed in constant time.
+
+
+This implementation then imposes that the user keep a control on vertices/edges identifiers. In order
+to make this easy, \dipergrafs proposes an ID generator that can be used via the methods:
+\begin{lstlisting}
+int Graph.getLowestEdgeIDAvailable()
+int Graph.getLowestVertexIDAvailable()
+\end{lstlisting}
+
+
+\section{Algorithms}
+
+\subsection{Algorithm framework}
+
+Within \dipergrafs, an algorithm is an object. It is stored in a \texttt{AlgorithmLibrary} class that is available from the graph itself.
+The basic primitive for invoking an algorithm looks then like this:
+\codeblock{graph.getAlgorithmLibrary().getDiameterAgorithm().getValue()}
+
+Facilities methods are provided for every algorithms provided with \dipergrafs, making a call look like that:
+\codeblock{graph.getDiameter()}
+
+
+
+
+\subsection{Predefined algorithms}
+
+\dipergrafs comes with a set of State-of-the-Art algorithms. These can be replaced and new ones can be added.
+
+\subsubsection{Distance matrix}
+
+The graph distance matrix, sometimes also called the all-pairs shortest path matrix, is the square matrix $d_{i,j}$ consisting of all graph distances from vertex $v_i$ to vertex $v_j$. 
+
+\subsubsection{Eccentricity}
+
+The eccentricity $\epsilon(v)$ of a graph vertex $v$ in a connected graph $G$ is the maximum graph distance between $v$ and any other vertex $u$ of $G$. For a disconnected graph, all vertices are defined to have infinite eccentricity. 
+
+\subsubsection{Radius}
+
+The radius of a graph is the minimum graph eccentricity of any graph vertex in a graph. 
+
+\subsubsection{Diameter}
+
+The length $max_{u,v}d(u,v)$of the "longest shortest path" (i.e., the longest graph geodesic) between any two graph vertices $(u,v)$ of a graph, where $d(u,v)$ is a graph distance. In other words, a graph's diameter is the largest number of vertices which must be traversed in order to travel from one vertex to another when paths which backtrack, detour, or loop are excluded from consideration. 
+
+
+
+\subsubsection{Adjacency matrix}
+
+The adjacency matrix, sometimes also called the connection matrix, of a simple graph is a matrix with rows and columns labeled by graph vertices, with a 1 or 0 in position $(v_i,v_j)$ according to whether $v_i$ and $v_j$ are adjacent or not. For a simple graph with no self-loops, the adjacency matrix must have 0s on the diagonal. For an undirected graph, the adjacency matrix is symmetric. 
+
+\subsubsection{Connected components}
+
+A  connected component of an undirected graph is a subgraph in which any two vertices are connected to each other by paths, and which is connected to no additional vertices.
+\subsubsection{Incidence matrix}
+
+The incidence matrix of a graph gives the (0,1)-matrix which has a row for each vertex and column for each edge, and (v,e)=1 iff vertex v is incident upon edge e (Skiena 1990, p. 135). However, some authors define the incidence matrix to be the transpose of this, with a column for each vertex and a row for each edge.
+
+\subsubsection{Minimal spanning tree}
+
+A spanning tree of a graph is a subset of n-1 edges that form a tree.
+
+For directed graphs, the minimum spanning tree problem is called the Arborescence problem and can be solved in quadratic time using the ChuÐLiu/Edmonds algorithm.
+
+
+
+
+ahbp 
+
+\subsubsection{Shortest paths}
+In graph theory, the shortest path problem is the problem of finding a path between two vertices (or nodes) such that the sum of the weights of its constituent edges is minimized. An example is finding the quickest way to get from one location to another on a road map; in this case, the vertices represent locations and the edges represent segments of road and are weighted by the time needed to travel that segment.
+
+
+\subsubsection{BFS}
+\subsubsection{dikjstra}
+
+
+
+
+
+
+\begin{itemize}
+  \item the set of edges connecting two given  vertices;
+  \item the set of edges incident to two given  vertices;
+  \item headless/tailless edges;
+  \item in/out neighbors;
+  \item isolated vertices;
+  \item loops;
+  \item set of vertices at a given distance;
+  \item set of vertices incident to a given edge;
+  \item set of vertices with a given in/out degree;
+  \item connected component containing a given edge;
+  \item determine if an edge is a bus or a undirected link.
+\item 
+\end{itemize}
+
+
+
+
+
+
+
+\subsubsection{utilities}
+Determine is a given graph is:
+\begin{description}
+  \item[complete]; A complete graph is a graph in which each pair of graph vertices is connected by an edge. 
+  \item [connected]; A graph which is connected in the sense of a topological space, i.e., there is a path from any point to any other point in the graph. A graph that is not connected is said to be disconnected. This definition means that the null graph and singleton graph are considered connected, while empty graphs on n>=2 nodes are disconnected.
+  \item[ null]; The term "null graph" is used both to refer to any empty graph and to the empty graph on 0 nodes. 
+  \item[reflexive]; A reflexive graph is a pseudograph such that each vertex has an associated graph loop. 
+  \item[regular]; A graph is said to be regular of degree r if all local degrees are the same number r. A 0-regular graph is an empty graph, a 1-regular graph consists of disconnected edges, and a 2-regular graph consists of disconnected cycles. The first interesting case is therefore 3-regular graphs, which are called cubic graphs.
+  \item[trivial];
+  \item[simple]; A simple graph, also called a strict graph, is an unweighted, undirected graph containing no graph loops or multiple edges.
+  \item[a tree];
+  \item[an hypergraph];A hypergraph is a graph in which generalized edges (called hyperedges) may connect more than two nodes. A connection between two or more vertices of a hypergraph. A hyperedge connecting just two vertices is simply a usual graph edge. 
+  \item[a multigraph]; The term multigraph refers to a graph in which multiple edges between nodes are either permitted (Harary 1994, p. 10; Gross and Yellen 1999, p. 4) or required.
+  \item [irreflexive];
+\end{description}
+
+
+\subsubsection{In/out degrees}
+\subsubsection{Clustering coefficient}
+
+a clustering coefficient is a measure of degree to which nodes in a graph tend to cluster together. Evidence suggests that in most real-world networks, and in particular social networks, nodes tend to create tightly knit groups characterised by a relatively high density of ties.
+
+
+
+\subsection{Topology generation}
+
+http://sndlib.zib.de/home.action
+
+GNP GNM
+random planar
+
+
+\subsubsection{clique}
+\subsubsection{bus}
+\subsubsection{chain}
+
+For instance, the chain topology model can be used to model in-line networks following railways, enabling train passengers to connect to the internet.
+
+\subsubsection{star}
+\subsubsection{grid}
+\subsubsection{Inet}
+
+Inet, currently at version 3.0, is an Autonomous System (AS) level Internet topology generator. 
+
+\subsubsection{ad hoc network}
+
+A wireless ad hoc network is a decentralized wireless network.[1] The network is ad hoc because it does not rely on a preexisting infrastructure, such as routers in wired networks or access points in managed (infrastructure) wireless networks. Instead, each node participates in routing by forwarding data for other nodes, and so the determination of which nodes forward data is made dynamically based on the network connectivity.
+
+\subsubsection{random}
+\subsubsection{ring}
+\subsubsection{chordal}
+\subsubsection{Brite}
+\subsubsection{GLP}
+
+\subsubsection{Transformation of existing topologies}
+\begin{description}
+  \item[inverting];
+  \item[symmetric];
+  \item[reflexive];
+\end{description}
+
+
+
+\subsection{Defining a new algorithm}
+
+You need to extends the class \code{org.dipergrafs.GraphAlgorithm} class and declare your new algorithm into
+the \code{org.dipergrafs.GraphAlgorithmLibrary} class.
+
+In order to make it easier to use your algorithm, you may want to add a new facility method into your own
+subclass of the \code{org.dipergrafs.ListGraph} class.  
+
+
+\section{Quest to the maximum performance}
+
+An important objective of the \dipergrafs project is to provide  an efficient graph library.
+
+\subsection{Data structure}
+
+The data structure is designed in such a way that all operation are performed in constant time.
+
+
+\subsection{Profiling algorithm implementations}
+
+Many researchers in algorithmics are interested in performance issues. In order to facilitate the study of the performance for
+algorithms, \dipergrafs provides a set of methods enabling to know the duration spent computing. 
+
+The implementations of the algorithms that \dipergrafs uses are the ones that suits better its data structure.
+
+
+
+\subsection{Caching}
+
+In order to improve even more the computational efficiency for the previously mentioned algorithms,
+\dipergrafs makes use of a {\em cache}.
+	  \begin{itemize}
+
+\item Basically, any given property will not be computed twice if the graph has not changed since then.
+This {\em improves} the complexity of graph operations.
+\item For example, the computation of all-pair shortest paths will return immediately if 
+the diameter  was previously computed . This is because both algorithms rely on a
+BFS that was first computed by the ``diameter algorithm''.
+	  \end{itemize}
+	  Depending on the application, performance  may dramatically improves.
+
+Practical experiments show that most time is wasted by computing several times the same
+algorithms on the same graphs, either directly or not.
+
+In order to avoid this, \dipergrafs provides a built-in mecanism which stores the
+results of calculations until a change occur in the structure of the graph. Changes include
+vertex or edge removal or addition. By default, property changes on vertices or edges are not
+taken into account (because \dipergrafs has no mean of detecting them).
+
+Consequently, between two changes of the graph structure (it is also likely that the graph
+is static, e.g. is will never change), the first invocation of a given graph operation
+will be performed in the theoretical time complexity, while each subsequent one will be
+performed in constant time --- it actually won't be performed at all, since the cache will bypass it.
+
+When a change occurs (event the slightest
+one), the entire cache is cleared. 
+
+\subsection{Parallelism}
+
+Modern computers embed a multi-core processor. In order to take advantage of this parallelism,
+whenever possible \dipergrafs split the computation in a number of independant jobs that are executed 
+in parallel, within distinct threads,  on the local computer.
+
+Depending on the algorithms, the speed off varies from near-to-zero to $n$,$n$ being the number of processors/cores available on the computer. 
+
+
+\section{Graph import/export formats}
+
+	\dipergrafs provides a set of bridges which make it interoperable 
+	with a number of external tools. This interoperability brings persistence,
+	dynamics, two-dimensional rendering (both static
+	and dynamic), etc. The coming sections detail the interoperability
+	capacities of \dipergrafs.
+
+SIF, GML, XGMML, BioPAX, PSI-MI, SBML, OBO?????
+\url{http://cytoscape.wodaklab.org/wiki/Cytoscape\_User\_Manual/Network\_Formats}
+
+
+\subsection{\dipergrafs native formats}
+
+\dipergrafs natively defines two graph import/export formats: DHDL and DHDF. 
+
+\subsubsection{DHDL: Directed Hypergraph Description Language}
+
+DHDL is an extension to the common adjacency list  format used by Inet, CAIDA maps, etc.
+It extends it by offering the ability to describe:
+\begin{itemize}
+  \item directed edges;
+  \item directed and undirected hyper-edges (bus);
+  \item half and loose edges (edge with one or no end);
+  \item edge identifiers.
+\end{itemize}
+
+DHDL imposes that vertex and edge identifiers are positive integers.
+The directivity of an edge is described by the use of the character $>$.
+Edge identifiers are optional: if they are not given, \dipergrafs will assign them itself
+using the natural order $0 1, 2, 3, etc$.
+
+The format for an ID, called $id$ is then \code{[0-9]+}. The format for an edge declaration is
+then: \codeblock{(id:)? id* >? id*}.
+
+As illustrated in the following examples, the compact syntax of DHDL enables the representation of any graph topology.
+
+
+
+\begin{center}
+\begin{tabular}{|l|r|}
+\hline
+\textit{The line} & \textit{Describes\ldots} \\
+\hline
+\code{1 2} & an undirected edge connecting vertices 1 and 2 \\ 
+\code{2 > 3} & a directed edge from 2 to 3 \\ 
+\code{1: 2 > 3} & the same, but the edge ID is set to 1 \\ 
+\code{4 > 5 6} &  a directed hyper-edge from 4 to 5 and 6 \\ 
+\code{> 1} & a directed edge to 1 with no source \\ 
+\code{3 >} & a directed edge from 3 with no destination \\ 
+\code{1 4 5 7} & a bus connecting vertices 1, 4, 5 and 7 \\
+\code{8} & an isolated vertex with ID 8 \\
+\code{>} & a loose edge \\
+\code{3:} & a loose edge with ID $3$ \\
+\code{3: >} & the same \\
+\code{\# a comment} & guess what\ldots \\
+\hline
+\end{tabular}
+\end{center}
+
+In DHDL, blank lines are ignored. If a \code{\#} is found, it is assumed that the
+rest of the line is a comment.
+
+
+\subsubsection{DHDF:  Directed Hypergraph Description Format}
+
+DHDF is the binary counterpart of DHDL. It provides a compact encoding that make DHDF data much shorter than DHDL one.  
+
+The number of bytes used for the storage of IDs is computed from the total number of elements.
+If less than $2^8$ elements have to be stored, they one byte will be used to store the IDs.
+If less than $2^16$ elements have to be stored, they two bytes will be used to store the IDs.
+Otherwise 4 bytes are used.
+
+
+\subsection{Others}
+
+\subsubsection{DGS}
+	
+		DGS (Dynamic Graph Stream) propose a  language for the description
+		of dynamics in simple graphs, directed or not.
+		Practically a DGS stream (coming from a file, a URL, etc) defines
+		a sequence of steps in which a number of events occur. Possible
+		events include: creation/deletion of a node, creation/deletion of
+		a link, modification of the value for a node/link attribute.
+		
+		\dipergrafs provides DGS drivers which
+		make it possible to:
+		\begin{itemize}
+			\item animate a hypergraph using the DGS language;
+			\item generate DGS text out of the events which happen
+			on the graph (e.g. manipulating a graph though its API entails
+			the generation of the corresponding DGS instructions). 
+		\end{itemize}
+
+\subsubsection{Exporation to GraphViz dot}
+		Graph visualization is a way of representing structural information as
+		diagrams of abstract graphs and networks. Automatic graph drawing has many
+		important applications in software engineering, database and web design,
+		networking, and in visual interfaces for many other domains. 
+	
+		Graphviz is open source graph visualization software. It takes as input
+		a description of a digraph and is able to ouput a variety of popular
+		graphic formats (both bitmap and vector-based). 
+	
+		\dipergrafs comes with a GraphViz driver which allow the user to 
+		export the graph as GraphViz text. In the case of dynamic graphs,
+		only snapshots can be generated since GraphViz does not consider
+		dynamics. In this case GraphStream can be used.
+		
+
+
+\subsubsection{Export to GML}
+\url{http://www.infosun.fmi.uni-passau.de/Graphlet/GML/}
+
+
+\begin{lstlisting}
+graph [
+	directed 1
+	node [
+		id 100
+		label d
+	]
+	node [
+		id 98
+		label b
+	]
+	node [
+		id 99
+		label c
+	]
+	node [
+		id 97
+		label a
+	]
+	edge [
+		source 97
+		destination 98
+		label 1
+	]
+	edge [
+		source 97
+		destination 99
+		label 2
+	]
+	edge [
+		source 98
+		destination 100
+		label 3
+	]
+]
+\end{lstlisting}
+
+\subsubsection{Export to GraphML}
+\begin{lstlisting}
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+	<graph id="1220081709" edgedefault="directed">
+		<node id="100" />
+		<node id="98" />
+		<node id="99" />
+		<node id="97" />
+		<edge source="97" destination="98" />
+		<edge source="97" destination="99" />
+		<edge source="98" destination="100" />
+	</graph>
+</graphml>
+\end{lstlisting}
+
+\subsection{Monitoring}
+
+\dipergrafs does not currently provide a graphical user interface. For monitoring purpose,
+it relies on the simple yet powerful Graphstream.
+
+		GraphStream is an open source  library which allows
+		the two-dimensional rendering of dynamic graphs.
+		GraphStream listens to graph changes
+		(node/edge creation/deletion and node/edge attribute value modification)
+		and automatically updates the graphical representation. It uses
+		an algorithm providing automatic balancing.
+
+\section{Usage}
+
+\subsection{Using \dipergrafs through its interactive console}
+
+\dipergrafs provides an interactive console like those that use Python and Perl programmers.
+\dipergrafs console is actually twofold. Programmers used to the python programming language
+have Python-based console at their disposal. Other may opt for the Java-based console.
+
+In any case, the console consists in a bridge between the user and \dipergrafs, meaning that
+the graph routines remain implemented in Java (they are not reinterpreted by the console).
+This ensure maximum performance.
+
+
+
+\subsection{Python console}
+
+The \dipergrafs Python console can be invoked via the command: \code{dipergrafs-console-python}.
+
+This console is based on Jython.
+
+Jython is a Java implementation of Python.
+Java programmers can add the Jython libraries to their system to allow end users to write simple or complicated scripts that add functionality to the application. 
+Jython provides an interactive interpreter that can be used to interact with Java packages or with running Java applications. This allows programmers to experiment and debug any Java system using Jython. 
+
+\begin{figure}
+\begin{lstlisting}
+$ dipergrafs-console-python 
+Jython 2.5.2rc3 (Release_2_5_2rc3:7184, Jan 10 2011, 22:54:57) 
+[OpenJDK 64-Bit Server VM (Sun Microsystems Inc.)] on java1.6.0_0
+>>> import org.dipergrafs  
+>>> g = org.dipergrafs.ListGraph() 
+>>> g.createVertices(20) 
+20 vertices. 0 edges
+>>> d = g.getDiameter()
+>>> d
+3
+\end{lstlisting}
+\caption{An example Jython code that computes the diameter of a grid of 20 vertices}
+\end{figure}
+
+\subsection{Java console}
+
+The \dipergrafs Python console can be invoked via the command: \code{dipergrafs-console-java}.
+
+This console is based on Beanshell.
+
+BeanShell is a small, free, embeddable Java source interpreter with object scripting language features, written in Java. BeanShell dynamically executes standard Java syntax and extends it with common scripting conveniences such as loose types, commands, and method closures like those in Perl and JavaScript. 
+In short, BeanShell is dynamically interpreted Java.
+
+\begin{figure}
+\begin{lstlisting}
+$ dipergrafs-console-java
+BeanShell 2.0b4 - by Pat Niemeyer (pat@pat.net)
+bsh % import *;
+bsh % g = new ListGraph();
+bsh % g.createVertices(20);
+bsh % g.dgrid();
+bsh % d = g.getDiameter();
+bsh % print(d);
+7
+\end{lstlisting}
+\caption{An example Jython code that computes the diameter of a grid of 20 vertices}
+\end{figure}
+
+
+\begin{figure}
+\begin{lstlisting}
+$ dipergrafs-console -l java
+BeanShell 2.0b4 - by Pat Niemeyer (pat@pat.net)
+bsh % import *;
+bsh % print(new ListGraph().createVertices(20).dgrid().getDiameter());
+7
+\end{lstlisting}
+\caption{The same, but minimal.}
+\end{figure}
+
+\subsection{Using \dipergrafs as a framework}
+
+Most Java frameworks suffer exposing their complex architecture to the user. Basic functionalities are often not accessible easily.
+In the specific case of graph library, most of the time functionalities like creating a graph with a desired topology or obtaining
+a shortest path require long coding. \dipergrafs wants to avoid this.
+
+Most of the \dipergrafs functionality is accessible directly via the \code{org.dipergrafs.ListGraph} class.
+
+
+\subsubsection{Creating an ring of 50 vertices}
+
+\begin{lstlisting}
+Graph g = new Graph().ring(50);
+\end{lstlisting}
+
+\subsubsection{Computing all-pair shortest paths}
+
+\begin{lstlisting}
+g.getAllPairShortestPaths();
+\end{lstlisting}
+
+\subsubsection{Getting a particular path}
+
+\begin{lstlisting}
+Path p = g.getPath(src, dest);
+\end{lstlisting}
+
+
+\subsection{Using \dipergrafs as an application}
+
+\dipergrafs comes with the following command-line utilities.
+All utilities that accept a graph description as input allow the user to enable/disable parallel computation and result caching.
+
+\subsubsection{\code{dipergrafs-compute-properties}}
+Computes the properties for the given graph. Optionally print their value and profile the algorithm used for computing them.The properties computed can be filtered by a regular expression.
+
+
+\subsubsection{\code{dipergrafs-convert}}
+Convert the given graph description file to another file.The output format is guessed by the extension of the output file, given as the second argument.If no such 2nd argument is passed, then the conversion is done to all output format supported.These include DHDL, DHDF, GML, GraphML, Inet, etc.
+\subsubsection{\code{dipergrafs-algorithms}}
+
+Print the list of algorithms available in the library
+
+\subsubsection{\code{dipergrafs-render-graphstream}}
+Render the given graph using Graphstream. Since Graphstream does not support hyper-edges, half-edgesand loose edges, these will not be rendered properly.
+
+\subsubsection{\code{dipergrafs-illustrate-topologies}}
+
+
+Converts
+
+
+
+\bibliographystyle{plain}
+\bibliography{dipergrafs}
+
+\end{document}

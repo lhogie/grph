@@ -1,0 +1,19 @@
+website:
+	dire qui chapotte le projet
+	dire ce que permet la licence
+	
+	
+	workshop ?
+	developement status
+	
+	mailing-list / forum
+	
+	qui utilise ?
+	how to report a bug ? -> mailing list
+	we need...
+	
+	
+recuperer une liste d'email de gens
+google alert / yahoo pipe
+forward relevant alerts to the mailing list
+announces on Jung JGraphT mailing list

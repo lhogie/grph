@@ -1,30 +1,42 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
+ 
+ 
 
 /*
  * To change this template, choose Tools | Templates
@@ -32,31 +44,31 @@
  */
 package grph.algo.sparse_cut;
 
-import grph.Grph;
-import grph.GrphAlgorithm;
-import grph.in_memory.InMemoryGrph;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import grph.Grph;
+import grph.GrphAlgorithm;
+import grph.in_memory.InMemoryGrph;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSets;
+import toools.collections.LucIntSets;
 import toools.extern.Proces;
 import toools.io.JavaResource;
 import toools.io.file.RegularFile;
 import toools.os.Linux;
 import toools.os.MacOSX;
 import toools.os.OperatingSystem;
-import toools.set.IntSet;
-import toools.set.IntSets;
 
 /**
  * 
@@ -94,10 +106,10 @@ public class SparseCutAlgorithm extends GrphAlgorithm<Collection<IntSet>>
 			inputFile.delete();
 			outputFile.delete();
 
-			IntSet part = IntSets.from(parseOutputData(g.getNumberOfVertices(), outText));
+			IntSet part = new IntOpenHashSet(parseOutputData(g.getNumberOfVertices(), outText));
 			Collection<IntSet> sets = new ArrayList<IntSet>();
 			sets.add(part);
-			sets.add(IntSets.difference(g.getVertices(), part));
+			sets.add(LucIntSets.difference(g.getVertices(), part));
 			return sets;
 		}
 		catch (IOException e)
@@ -425,7 +437,7 @@ public class SparseCutAlgorithm extends GrphAlgorithm<Collection<IntSet>>
 
 			// FINDING A GOOD CUT: STEP4 (constructing partitions)
 			double r = delta; // Math.random() * delta;
-			Collections.shuffle(P);
+			java.util.Collections.shuffle(P);
 			double[] randomVector = P.iterator().next();
 
 			Set<double[]> partition = new HashSet<double[]>();

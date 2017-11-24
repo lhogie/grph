@@ -1,38 +1,42 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
 
 package grph.gui;
-
-import grph.Grph;
-import grph.TopologyListener;
-import grph.properties.NumericalProperty;
-import grph.properties.Property;
-import grph.properties.PropertyListener;
 
 import java.awt.GridLayout;
 import java.io.IOException;
@@ -45,11 +49,15 @@ import org.miv.graphstream.graph.implementations.MultiGraph;
 import org.miv.graphstream.ui.GraphViewerRemote;
 import org.miv.graphstream.ui2.swing.SwingGraphViewer;
 
+import grph.Grph;
+import grph.TopologyListener;
+import grph.properties.NumericalProperty;
+import grph.properties.Property;
+import grph.properties.PropertyListener;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import toools.NotYetImplementedException;
+import toools.collections.primitive.IntCursor;
 import toools.io.JavaResource;
-import toools.set.IntSet;
-
-import com.carrotsearch.hppc.cursors.IntCursor;
 
 public class GraphstreamBasedRenderer extends JPanel
 {
@@ -83,7 +91,8 @@ public class GraphstreamBasedRenderer extends JPanel
 
 		try
 		{
-			String css = new String(new JavaResource(GraphstreamBasedRenderer.class, "graphstream-0.4.2.css").getByteArray());
+			String css = new String(new JavaResource(GraphstreamBasedRenderer.class,
+					"graphstream-0.4.2.css").getByteArray());
 			graphstreamGraph.addAttribute("ui.stylesheet", css);
 		}
 		catch (IOException e)
@@ -94,7 +103,7 @@ public class GraphstreamBasedRenderer extends JPanel
 
 		sourceGraph_ = g;
 
-		for (IntCursor v : g.getVertices())
+		for (IntCursor v : IntCursor.fromFastUtil(g.getVertices()))
 		{
 			this.topologyListener.vertexAdded(g, v.value);
 		}
@@ -129,13 +138,13 @@ public class GraphstreamBasedRenderer extends JPanel
 				{
 					if (v < u)
 					{
-						this.topologyListener.undirectedSimpleEdgeAdded(g, -1, u, v);
+						this.topologyListener.undirectedSimpleEdgeAdded(g, - 1, u, v);
 					}
 				}
 
 				for (int v : g.getOutOnlyElements(u).toIntArray())
 				{
-					this.topologyListener.directedSimpleEdgeAdded(g, -1, u, v);
+					this.topologyListener.directedSimpleEdgeAdded(g, - 1, u, v);
 				}
 
 			}
@@ -183,7 +192,7 @@ public class GraphstreamBasedRenderer extends JPanel
 	{
 		private void addEdge(Grph ds, int e)
 		{
-			if (e != -1)
+			if (e != - 1)
 			{
 				edgeLabelListener.valueChanged(sourceGraph_.getEdgeLabelProperty(), e);
 				edgeColorListener.valueChanged(sourceGraph_.getEdgeColorProperty(), e);
@@ -194,9 +203,12 @@ public class GraphstreamBasedRenderer extends JPanel
 
 		private void addVertex(Grph ds, int vertex)
 		{
-			vertexLabelListener.valueChanged(sourceGraph_.getVertexLabelProperty(), vertex);
-			vertexColorListener.valueChanged(sourceGraph_.getVertexColorProperty(), vertex);
-			vertexShapeListener.valueChanged(sourceGraph_.getVertexShapeProperty(), vertex);
+			vertexLabelListener.valueChanged(sourceGraph_.getVertexLabelProperty(),
+					vertex);
+			vertexColorListener.valueChanged(sourceGraph_.getVertexColorProperty(),
+					vertex);
+			vertexShapeListener.valueChanged(sourceGraph_.getVertexShapeProperty(),
+					vertex);
 			vertexSizeListener.valueChanged(sourceGraph_.getVertexSizeProperty(), vertex);
 		}
 
@@ -223,7 +235,7 @@ public class GraphstreamBasedRenderer extends JPanel
 		@Override
 		public void directedSimpleEdgeAdded(Grph g, int edge, int t, int h)
 		{
-			String edgeID = edge == -1 ? t + "=>" + h : String.valueOf(edge);
+			String edgeID = edge == - 1 ? t + "=>" + h : String.valueOf(edge);
 			String srcID = String.valueOf(t);
 			String destID = String.valueOf(h);
 			graphstreamGraph.addEdge(edgeID, srcID, destID, true);
@@ -233,7 +245,8 @@ public class GraphstreamBasedRenderer extends JPanel
 		@Override
 		public void undirectedSimpleEdgeAdded(Grph g, int edge, int a, int b)
 		{
-			String edgeID = edge == -1 ? Math.min(a, b) + "-" + Math.max(a, b) : String.valueOf(edge);
+			String edgeID = edge == - 1 ? Math.min(a, b) + "-" + Math.max(a, b)
+					: String.valueOf(edge);
 			String srcID = String.valueOf(a);
 			String destID = String.valueOf(b);
 			graphstreamGraph.addEdge(edgeID, srcID, destID, false);
@@ -257,25 +270,28 @@ public class GraphstreamBasedRenderer extends JPanel
 		@Override
 		public void directedSimpleEdgeRemoved(Grph g, int edge, int src, int dest)
 		{
-			String edgeID = edge == -1 ? src + "=>" + dest : String.valueOf(edge);
+			String edgeID = edge == - 1 ? src + "=>" + dest : String.valueOf(edge);
 			graphstreamGraph.removeEdge(edgeID);
 		}
 
 		@Override
 		public void undirectedSimpleEdgeRemoved(Grph Grph, int edge, int a, int b)
 		{
-			String edgeID = edge == -1 ? Math.min(a, b) + "-" + Math.max(a, b) : String.valueOf(edge);
+			String edgeID = edge == - 1 ? Math.min(a, b) + "-" + Math.max(a, b)
+					: String.valueOf(edge);
 			graphstreamGraph.removeEdge(edgeID);
 		}
 
 		@Override
-		public void undirectedHyperEdgeRemoved(Grph graph, int edge, IntSet incidentVertices)
+		public void undirectedHyperEdgeRemoved(Grph graph, int edge,
+				IntSet incidentVertices)
 		{
 			throw new NotYetImplementedException();
 		}
 
 		@Override
-		public void directedHyperEdgeRemoved(Grph graph, int edge, IntSet src, IntSet dest)
+		public void directedHyperEdgeRemoved(Grph graph, int edge, IntSet src,
+				IntSet dest)
 		{
 			throw new NotYetImplementedException();
 		}
@@ -323,7 +339,7 @@ public class GraphstreamBasedRenderer extends JPanel
 		@Override
 		public void valueChanged(Property p, int e)
 		{
-			if (e != -1)
+			if (e != - 1)
 			{
 				String l = p.getValueAsString(e);
 				getGraphstreamEdge(e).setAttribute("label", l == null ? "e" + e : l);
@@ -346,7 +362,8 @@ public class GraphstreamBasedRenderer extends JPanel
 		@Override
 		public void valueChanged(Property p, int e)
 		{
-			getGraphstreamNode(e).setAttribute("node-shape", ((NumericalProperty) p).getValueAsInt(e) == 0 ? "circle" : "square");
+			getGraphstreamNode(e).setAttribute("node-shape",
+					((NumericalProperty) p).getValueAsInt(e) == 0 ? "circle" : "square");
 		}
 	}
 
@@ -355,9 +372,11 @@ public class GraphstreamBasedRenderer extends JPanel
 		@Override
 		public void valueChanged(Property p, int e)
 		{
-			if (e != -1)
+			if (e != - 1)
 			{
-				getGraphstreamEdge(e).setAttribute("edge-style", ((NumericalProperty) p).getValueAsInt(e) == 0 ? "plain" : "dashes");
+				getGraphstreamEdge(e).setAttribute("edge-style",
+						((NumericalProperty) p).getValueAsInt(e) == 0 ? "plain"
+								: "dashes");
 			}
 		}
 	}
@@ -367,7 +386,8 @@ public class GraphstreamBasedRenderer extends JPanel
 		@Override
 		public void valueChanged(Property p, int v)
 		{
-			getGraphstreamNode(v).setAttribute("width", 2 * ((NumericalProperty) p).getValueAsInt(v));
+			getGraphstreamNode(v).setAttribute("width",
+					2 * ((NumericalProperty) p).getValueAsInt(v));
 		}
 	}
 
@@ -376,9 +396,10 @@ public class GraphstreamBasedRenderer extends JPanel
 		@Override
 		public void valueChanged(Property p, int e)
 		{
-			if (e != -1)
+			if (e != - 1)
 			{
-				getGraphstreamEdge(e).setAttribute("width", ((NumericalProperty) p).getValueAsInt(e) * 2);
+				getGraphstreamEdge(e).setAttribute("width",
+						((NumericalProperty) p).getValueAsInt(e) * 2);
 			}
 		}
 	}
@@ -388,9 +409,10 @@ public class GraphstreamBasedRenderer extends JPanel
 		@Override
 		public void valueChanged(Property p, int e)
 		{
-			if (e != -1)
+			if (e != - 1)
 			{
-				getGraphstreamEdge(e).setAttribute("color", sourceGraph_.getEdgeColorProperty().getValueAsColor(e));
+				getGraphstreamEdge(e).setAttribute("color",
+						sourceGraph_.getEdgeColorProperty().getValueAsColor(e));
 			}
 		}
 	}
@@ -400,7 +422,8 @@ public class GraphstreamBasedRenderer extends JPanel
 		@Override
 		public void valueChanged(Property p, int v)
 		{
-			getGraphstreamNode(v).setAttribute("color", sourceGraph_.getVertexColorProperty().getValueAsColor(v));
+			getGraphstreamNode(v).setAttribute("color",
+					sourceGraph_.getVertexColorProperty().getValueAsColor(v));
 		}
 	}
 

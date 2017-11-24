@@ -1,30 +1,40 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
 
 /**
  * Grph
@@ -40,27 +50,26 @@
 
 package grph.oo;
 
-import grph.Grph;
-import grph.algo.AllPaths;
-import grph.algo.subgraph_isomorphism.own.EdgeLabelBasedSubgraphMatcher;
-import grph.algo.subgraph_isomorphism.own.FindAllCycles;
-import grph.path.Path;
-import grph.properties.StringProperty;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import grph.Grph;
+import grph.algo.AllPaths;
+import grph.algo.subgraph_isomorphism.own.EdgeLabelBasedSubgraphMatcher;
+import grph.algo.subgraph_isomorphism.own.FindAllCycles;
+import grph.path.Path;
+import grph.properties.StringProperty;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import toools.UnitTests;
 import toools.collections.AutoGrowingArrayList;
-import toools.set.IntHashSet;
-import toools.set.IntSet;
-
-import com.carrotsearch.hppc.ObjectIntMap;
-import com.carrotsearch.hppc.ObjectIntOpenHashMap;
-import com.carrotsearch.hppc.cursors.IntCursor;
+import toools.collections.primitive.IntCursor;
+import toools.collections.primitive.LucIntHashSet;
+import toools.collections.primitive.LucIntSet;
 
 /**
  * This class provides an object-oriented interface to the functionality
@@ -74,8 +83,8 @@ import com.carrotsearch.hppc.cursors.IntCursor;
  */
 public class ObjectGrph<V, E>
 {
-	private final ObjectIntMap<V> vertex_int = new ObjectIntOpenHashMap<V>();
-	private final ObjectIntMap<E> edge_int = new ObjectIntOpenHashMap<E>();
+	private final Object2IntMap<V> vertex_int = new Object2IntOpenHashMap<V>();
+	private final Object2IntMap<E> edge_int = new Object2IntOpenHashMap<E>();
 	private final AutoGrowingArrayList<V> vertices = new AutoGrowingArrayList();
 	private final AutoGrowingArrayList<E> edges = new AutoGrowingArrayList();
 	protected final Grph backingGrph = new grph.in_memory.InMemoryGrph();
@@ -85,7 +94,7 @@ public class ObjectGrph<V, E>
 		backingGrph.setVerticesLabel(new StringProperty("vertex label"));
 		backingGrph.setEdgesLabel(new StringProperty("edge label"));
 	}
-	
+
 	public ObjectGrph<V, E> getSubGraph(Grph g)
 	{
 		ObjectGrph<V, E> og = new ObjectGrph<V, E>();
@@ -148,6 +157,9 @@ public class ObjectGrph<V, E>
 
 	public void removeVertex(V v)
 	{
+		if ( ! getVertices().contains(v))
+			throw new IllegalArgumentException("vertex " + v + " not in graph");
+
 		int vi = vertex_int.remove(v);
 		vertices.set(vi, null);
 		backingGrph.removeVertex(vi);
@@ -155,6 +167,9 @@ public class ObjectGrph<V, E>
 
 	public void removeEdge(E e)
 	{
+		if ( ! getEdges().contains(e))
+			throw new IllegalArgumentException("edge " + e + " not in graph");
+
 		int ie = edge_int.remove(e);
 		edges.set(ie, null);
 		backingGrph.removeEdge(ie);
@@ -162,7 +177,8 @@ public class ObjectGrph<V, E>
 
 	public int addSimpleEdge(V src, E e, V dest, boolean directed)
 	{
-		assert !getEdges().contains(e) : "edge " + e + " already in graph";
+		if (getEdges().contains(e))
+			throw new IllegalArgumentException("edge " + e + " already in graph");
 
 		int a = getVertices().contains(src) ? v2i(src) : addVertex(src);
 		int b = getVertices().contains(dest) ? v2i(dest) : addVertex(dest);
@@ -193,7 +209,6 @@ public class ObjectGrph<V, E>
 		return addSimpleEdge(src, e, dest, false);
 	}
 
-	
 	public int addDirectedSimpleEdge(V src, E e, V dest)
 	{
 		return addSimpleEdge(src, e, dest, true);
@@ -207,7 +222,7 @@ public class ObjectGrph<V, E>
 
 	public boolean hasIncidentEdges(V v)
 	{
-		return !backingGrph.getEdgesIncidentTo(v2i(v)).isEmpty();
+		return ! backingGrph.getEdgesIncidentTo(v2i(v)).isEmpty();
 	}
 
 	public Set<E> getIncidentEdges(V v)
@@ -217,7 +232,7 @@ public class ObjectGrph<V, E>
 
 	protected int v2i(V v)
 	{
-		if (!getVertices().contains(v))
+		if ( ! getVertices().contains(v))
 			throw new IllegalArgumentException("unknow vertex " + v);
 
 		return vertex_int.get(v);
@@ -225,18 +240,17 @@ public class ObjectGrph<V, E>
 
 	public Collection<V> getVertices()
 	{
-		// converts the HPPC collection to Java collection
-		return new HPPCCollection2JavaCollection<V>(vertex_int.keys());
+		return vertex_int.keySet();
 	}
 
 	public Collection<E> getEdges()
 	{
-		return new HPPCCollection2JavaCollection<E>(edge_int.keys());
+		return edge_int.keySet();
 	}
 
 	protected int e2i(E e)
 	{
-		if (!getEdges().contains(e))
+		if ( ! getEdges().contains(e))
 			throw new IllegalArgumentException("unknow edge " + e);
 
 		return edge_int.get(e);
@@ -256,7 +270,7 @@ public class ObjectGrph<V, E>
 	{
 		Set<V> c = new HashSet();
 
-		for (IntCursor n : set)
+		for (IntCursor n : IntCursor.fromFastUtil(set))
 		{
 			c.add(i2v(n.value));
 		}
@@ -266,7 +280,7 @@ public class ObjectGrph<V, E>
 
 	protected IntSet v2i(Collection<V> set)
 	{
-		IntSet c = new IntHashSet();
+		IntSet c = new LucIntHashSet();
 
 		for (V v : set)
 		{
@@ -280,7 +294,7 @@ public class ObjectGrph<V, E>
 	{
 		Set<E> c = new HashSet();
 
-		for (IntCursor n : set)
+		for (IntCursor n : IntCursor.fromFastUtil(set))
 		{
 			c.add(i2e(n.value));
 		}
@@ -290,7 +304,7 @@ public class ObjectGrph<V, E>
 
 	protected IntSet e2i(Set<E> set)
 	{
-		IntSet c = new IntHashSet();
+		IntSet c = new LucIntHashSet();
 
 		for (E e : set)
 		{
@@ -362,8 +376,10 @@ public class ObjectGrph<V, E>
 	public Map<String, Set<ObjectPath>> findMatchingPaths(Set<String> patterns)
 	{
 		Set<ObjectGrph> res = new HashSet<ObjectGrph>();
-		Map<String, Set<Path>> matches = new EdgeLabelBasedSubgraphMatcher().findAllPathsMatching(backingGrph, patterns,
-				this.backingGrph.getVertexLabelProperty(), backingGrph.getEdgeLabelProperty());
+		Map<String, Set<Path>> matches = new EdgeLabelBasedSubgraphMatcher()
+				.findAllPathsMatching(backingGrph, patterns,
+						this.backingGrph.getVertexLabelProperty(),
+						backingGrph.getEdgeLabelProperty());
 
 		Map<String, Set<ObjectPath>> r = new HashMap<String, Set<ObjectPath>>();
 

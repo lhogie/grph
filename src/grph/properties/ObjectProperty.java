@@ -1,41 +1,45 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
 
 package grph.properties;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
+import it.unimi.dsi.fastutil.ints.IntSet;
 import toools.collections.AutoGrowingArrayList;
-import toools.set.IntSet;
 
 public abstract class ObjectProperty<T> extends Property
 {
@@ -67,7 +71,7 @@ public abstract class ObjectProperty<T> extends Property
 	@Override
 	public void cloneValuesTo(Property otherProperty)
 	{
-		if (!(otherProperty instanceof ObjectProperty))
+		if ( ! (otherProperty instanceof ObjectProperty))
 			throw new IllegalArgumentException();
 
 		ObjectProperty p = (ObjectProperty) otherProperty;
@@ -80,7 +84,7 @@ public abstract class ObjectProperty<T> extends Property
 
 		T oldValue = id < objects.size() ? objects.get(id) : null;
 
-		if (oldValue == null || newValue == null || !oldValue.equals(newValue))
+		if (oldValue == null || newValue == null || ! oldValue.equals(newValue))
 		{
 			this.objects.set(id, newValue);
 
@@ -99,26 +103,6 @@ public abstract class ObjectProperty<T> extends Property
 		{
 			setValue(e, v);
 		}
-	}
-
-	@Override
-	public void fromGrphBinary(DataInputStream is) throws IOException
-	{
-		try
-		{
-			objects = (AutoGrowingArrayList) new ObjectInputStream(is).readObject();
-		}
-		catch (ClassNotFoundException e)
-		{
-			throw new IOException(e);
-		}
-	}
-
-	@Override
-	public void toGrphBinary(DataOutputStream os) throws IOException
-	{
-		ObjectOutputStream oos = new ObjectOutputStream(os);
-		oos.writeObject(objects);
 	}
 
 	@Override

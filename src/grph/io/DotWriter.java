@@ -1,34 +1,42 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
 
 package grph.io;
-
-import grph.Grph;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,9 +45,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import grph.Grph;
+import toools.collections.primitive.IntCursor;
 import toools.gui.Utilities;
-
-import com.carrotsearch.hppc.cursors.IntCursor;
 
 public class DotWriter extends AbstractGraphTextWriter
 {
@@ -50,7 +58,8 @@ public class DotWriter extends AbstractGraphTextWriter
 		printGraph(g, true, ps);
 	}
 
-	public void printGraph(Grph g, boolean writeEdgeLabels, OutputStream os) throws IOException
+	public void printGraph(Grph g, boolean writeEdgeLabels, OutputStream os)
+			throws IOException
 	{
 		os.write(createDotText(g, writeEdgeLabels).getBytes());
 	}
@@ -62,21 +71,22 @@ public class DotWriter extends AbstractGraphTextWriter
 		text.append("\trankdir=LR;\n");
 		text.append("\tstart=0;\n");
 		text.append("\tnode [style=\"filled\"]\n\n");
-		
 
-		for (IntCursor c : graph.getVertices())
+		for (IntCursor c : IntCursor.fromFastUtil(graph.getVertices()))
 		{
 			int v = c.value;
 			text.append('\t');
 			text.append(v);
 			text.append(' ');
 			Map<String, Object> map = new HashMap<String, Object>();
-			map.put("fillcolor", "#" + Utilities.toRGBHexa(graph.getVertexColorProperty().getValueAsColor(v)));
+			map.put("fillcolor", "#" + Utilities
+					.toRGBHexa(graph.getVertexColorProperty().getValueAsColor(v)));
 			map.put("fontcolor", "black");
 			map.put("label", graph.getVertexLabelProperty().getValueAsString(v));
-			
+
 			map.put("size", graph.getVertexSizeProperty().getValue(v));
-			map.put("shape", graph.getVertexShapeProperty().getValue(v) == 1 ? "square" : "circle");
+			map.put("shape", graph.getVertexShapeProperty().getValue(v) == 1 ? "square"
+					: "circle");
 			text.append(to(map));
 			text.append(';');
 			text.append('\n');
@@ -84,7 +94,7 @@ public class DotWriter extends AbstractGraphTextWriter
 
 		text.append('\n');
 
-		for (IntCursor c : graph.getEdges())
+		for (IntCursor c : IntCursor.fromFastUtil(graph.getEdges()))
 		{
 			int e = c.value;
 
@@ -100,7 +110,8 @@ public class DotWriter extends AbstractGraphTextWriter
 			text.append(' ');
 
 			Map<String, Object> map = new HashMap<String, Object>();
-			map.put("color", "#" + Utilities.toRGBHexa(graph.getEdgeColorProperty().getValueAsColor(c.value)));
+			map.put("color", "#" + Utilities
+					.toRGBHexa(graph.getEdgeColorProperty().getValueAsColor(c.value)));
 
 			if (writeEdgeLabels)
 			{
@@ -113,7 +124,8 @@ public class DotWriter extends AbstractGraphTextWriter
 			}
 
 			map.put("penwidth", graph.getEdgeWidthProperty().getValue(e));
-			map.put("style", graph.getEdgeStyleProperty().getValue(e) == 1 ? "dotted" : "solid");
+			map.put("style",
+					graph.getEdgeStyleProperty().getValue(e) == 1 ? "dotted" : "solid");
 
 			text.append(to(map));
 			text.append(';');
@@ -121,7 +133,7 @@ public class DotWriter extends AbstractGraphTextWriter
 		}
 
 		text.append('}');
-//		System.out.println(text);
+		// System.out.println(text);
 		return text.toString();
 	}
 

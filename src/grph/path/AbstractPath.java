@@ -1,38 +1,47 @@
-/*
- * (C) Copyright 2009-2013 CNRS.
- *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
- *
- * Contributors:
+/* (C) Copyright 2009-2013 CNRS (Centre National de la Recherche Scientifique).
 
-    Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
-    Aurelien Lancin (Coati research team, Inria)
-    Christian Glacet (LaBRi, Bordeaux)
-    David Coudert (Coati research team, Inria)
-    Fabien Crequis (Coati research team, Inria)
-    Grégory Morel (Coati research team, Inria)
-    Issam Tahiri (Coati research team, Inria)
-    Julien Fighiera (Aoste research team, Inria)
-    Laurent Viennot (Gang research-team, Inria)
-    Michel Syska (I3S, University of Nice-Sophia Antipolis)
-    Nathann Cohen (LRI, Saclay) 
- */
+Licensed to the CNRS under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The CNRS licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+
+*/
+
+/* Contributors:
+
+Luc Hogie (CNRS, I3S laboratory, University of Nice-Sophia Antipolis) 
+Aurelien Lancin (Coati research team, Inria)
+Christian Glacet (LaBRi, Bordeaux)
+David Coudert (Coati research team, Inria)
+Fabien Crequis (Coati research team, Inria)
+Grégory Morel (Coati research team, Inria)
+Issam Tahiri (Coati research team, Inria)
+Julien Fighiera (Aoste research team, Inria)
+Laurent Viennot (Gang research-team, Inria)
+Michel Syska (I3S, Université Cote D'Azur)
+Nathann Cohen (LRI, Saclay) 
+Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+
+*/
 
 package grph.path;
 
 import grph.Grph;
 import grph.properties.NumericalProperty;
-import toools.set.DefaultIntSet;
-import toools.set.IntSet;
-import toools.set.IntSets;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import toools.collections.primitive.SelfAdaptiveIntSet;
 
 /**
  * A abstraction of path. A path is seen as a sequence of vertices. At this
@@ -53,18 +62,31 @@ public abstract class AbstractPath implements Path
 	@Override
 	public IntSet getVertexSet()
 	{
-		return IntSets.from(toVertexArray());
+		return toVertexSet();
+	}
+
+	public IntSet toVertexSet()
+	{
+		IntSet s = new SelfAdaptiveIntSet();
+		int sz = getLength();
+
+		for (int i = 0; i < sz; ++i)
+		{
+			s.add(getVertexAt(i));
+		}
+
+		return s;
 	}
 
 	public void extend(int v)
 	{
-		extend(-1, v);
+		extend( - 1, v);
 	}
 
 	@Override
 	public boolean isElementary()
 	{
-		IntSet s = new DefaultIntSet();
+		IntSet s = new SelfAdaptiveIntSet();
 
 		for (int v : toVertexArray())
 		{
@@ -92,50 +114,8 @@ public abstract class AbstractPath implements Path
 	@Override
 	public boolean permitsSameTrip(Path anotherPath)
 	{
-		return this.getSource() == anotherPath.getSource() && this.getDestination() == anotherPath.getDestination();
-	}
-
-	/**
-	 * Checks whether this path is applicable to the given graph. A path may not
-	 * be applicable if the graph does not have some of the vertices or edges
-	 * defined by this path.
-	 * 
-	 * @param g
-	 * @return true if this path is applicable to the given graph, false
-	 *         otherwise.
-	 */
-	@Override
-	public boolean isApplicable(Grph g)
-	{
-		int[] list = toVertexArray();
-
-		if (list == null)
-		{
-			return false;
-		}
-		else
-		{
-			for (int i = list.length - 1; i > 0; --i)
-			{
-				int v = list[i];
-				int pred = list[i - 1];
-
-				if (!g.getVertices().contains(v))
-				{
-					return false;
-				}
-				else if (!g.getVertices().contains(pred))
-				{
-					return false;
-				}
-				else if (!g.areVerticesAdjacent(v, pred))
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
+		return this.getSource() == anotherPath.getSource()
+				&& this.getDestination() == anotherPath.getDestination();
 	}
 
 	/**
@@ -202,13 +182,13 @@ public abstract class AbstractPath implements Path
 	@Override
 	public boolean isHamiltonian(Grph g)
 	{
-		return getLength() == g.getNumberOfVertices() && !hasLoop();
+		return getLength() == g.getNumberOfVertices() && ! hasLoop();
 	}
 
 	@Override
 	public boolean hasLoop()
 	{
-		IntSet visited = new DefaultIntSet();
+		IntSet visited = new SelfAdaptiveIntSet();
 
 		for (int c : toVertexArray())
 		{
@@ -254,7 +234,8 @@ public abstract class AbstractPath implements Path
 				int e = getEdgeHeadingToVertexAt(i);
 				int pe = p.getEdgeHeadingToVertexAt(i);
 
-				if ((e < 0 && pe >= 0) || (e >= 0 && pe < 0) || (e >= 0 && pe >= 0 && e != pe))
+				if ((e < 0 && pe >= 0) || (e >= 0 && pe < 0)
+						|| (e >= 0 && pe >= 0 && e != pe))
 				{
 					return false;
 				}
@@ -313,5 +294,54 @@ public abstract class AbstractPath implements Path
 	public int hashCode()
 	{
 		return toString().hashCode();
+	}
+
+	@Override
+	public String whyNotApplicable(Grph g)
+	{
+		int[] list = toVertexArray();
+
+		if (list == null)
+		{
+			return "no vertices";
+		}
+		else
+		{
+			for (int i = list.length - 1; i > 0; --i)
+			{
+				int v = list[i];
+				int pred = list[i - 1];
+
+				if ( ! g.getVertices().contains(v))
+				{
+					return "vertex  " + v + " not in graph";
+				}
+				else if ( ! g.getVertices().contains(pred))
+				{
+					return "vertex  " + pred + " not in graph";
+				}
+				else if ( ! g.areVerticesAdjacent(pred, v))
+				{
+					return "no edge from " + pred + " to " + v;
+				}
+			}
+
+			return null;
+		}
+	}
+
+	/**
+	 * Checks whether this path is applicable to the given graph. A path may not
+	 * be applicable if the graph does not have some of the vertices or edges
+	 * defined by this path.
+	 * 
+	 * @param g
+	 * @return true if this path is applicable to the given graph, false
+	 *         otherwise.
+	 */
+	@Override
+	public boolean isApplicable(Grph g)
+	{
+		return whyNotApplicable(g) == null;
 	}
 }

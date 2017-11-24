@@ -1,0 +1,13 @@
+#TeXlipse project settings
+#Tue Nov 08 14:55:01 CET 2011
+builderNum=2
+outputDir=
+makeIndSty=
+bibrefDir=
+outputFormat=pdf
+tempDir=tmp
+mainTexFile=grph-algos.tex
+outputFile=grph-algos.pdf
+langSpell=en
+markDer=true
+srcDir=

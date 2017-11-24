@@ -1,0 +1,13 @@
+#TeXlipse project settings
+#Thu Apr 19 19:28:06 CEST 2012
+builderNum=2
+outputDir=
+makeIndSty=
+bibrefDir=
+outputFormat=pdf
+tempDir=tmp
+mainTexFile=graph-routing.tex
+outputFile=graph-routing.pdf
+langSpell=en
+markDer=true
+srcDir=
