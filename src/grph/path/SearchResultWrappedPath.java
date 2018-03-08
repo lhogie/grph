@@ -108,6 +108,7 @@ public class SearchResultWrappedPath extends AbstractPath
 			}
 
 			s.add(source);
+			s.trim();
 			this.vertexArray = s.elements();
 			Arrays.reverse(this.vertexArray);
 		}
