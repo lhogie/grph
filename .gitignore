@@ -1,7 +1,8 @@
-*
-*/
-!.gitignore
-!src/
-!doc/
+.gitignore
+.classpath
+.project
+.settings/
 doc/javadoc/
+target/
+bin/
 
