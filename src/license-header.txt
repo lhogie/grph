@@ -32,7 +32,7 @@ Julien Fighiera (Aoste research team, Inria)
 Laurent Viennot (Gang research-team, Inria)
 Michel Syska (I3S, Université Cote D'Azur)
 Nathann Cohen (LRI, Saclay) 
-Julien Deantoin (I3S, Université Cote D'Azur, Saclay) 
+Julien Deantoni (I3S, Université Cote D'Azur, Saclay) 
 
 */
  
